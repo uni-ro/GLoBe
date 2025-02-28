@@ -62,6 +62,7 @@ ETH_TxPacketConfig TxConfig;
 
 ETH_HandleTypeDef heth;
 
+UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart7;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
@@ -80,6 +81,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_UART7_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
@@ -88,6 +90,55 @@ static void MX_GPIO_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//#define RX_BUFF_SIZE 512
+#define MAIN_BUFF_SIZE 2048
+
+//uint8_t RXBuf[RX_BUFF_SIZE];
+uint8_t MainBuf[MAIN_BUFF_SIZE];
+/*
+
+uint16_t oldPos = 0;
+uint16_t newPos = 0;
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+	if (huart->Instance == USART1)
+	{
+		oldPos = newPos;  // Update the last position before copying new data
+
+		/* If the data in large and it is about to exceed the buffer size, we have to route it to the start of the buffer
+		 * This is to maintain the circular buffer
+		 * The old data in the main buffer will be overlapped
+		 */
+		/*if (oldPos+Size > MAIN_BUFF_SIZE)  // If the current position + new data size is greater than the main buffer
+		{
+			uint16_t datatocopy = MAIN_BUFF_SIZE-oldPos;  // find out how much space is left in the main buffer
+			memcpy ((uint8_t *)MainBuf+oldPos, RXBuf, datatocopy);  // copy data in that remaining space
+
+			oldPos = 0;  // point to the start of the buffer
+			memcpy ((uint8_t *)MainBuf, (uint8_t *)RXBuf+datatocopy, (Size-datatocopy));  // copy the remaining data
+			newPos = (Size-datatocopy);  // update the position
+		}*/
+
+		/* if the current position + new data size is less than the main buffer
+		 * we will simply copy the data into the buffer and update the position
+		 */
+		/*else
+		{
+			memcpy ((uint8_t *)MainBuf+oldPos, RXBuf, Size);
+			newPos = Size+oldPos;
+
+			// THE BULK DATA MUST HAVE FINISHED BEING SENT THROUGH HERE, SO PROCESS THE DATA?
+			printf("Data finsiehd, of new position: %d", newPos);
+			// Process the data
+			// Clear the MainBuf, and update new position to 0?
+		}
+
+		/* start the DMA again */
+		/*HAL_UARTEx_ReceiveToIdle_DMA(&huart1, (uint8_t *) RXBuf, RX_BUFF_SIZE);
+		__HAL_DMA_DISABLE_IT(&hdma_usart1_rx, DMA_IT_HT);
+	}
+}*/
 /* USER CODE END 0 */
 
 /**
@@ -124,49 +175,76 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_UART7_Init();
   MX_USART1_UART_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	uint8_t addr = 0x42;
-	uint16_t size = 2000;
-	uint8_t *pData = malloc(sizeof(uint8_t) * size);
+	//uint8_t addr = 0x42;
 	HAL_Delay(1000);
 	//scanI2C(&hi2c1);
 	uint32_t Timer = HAL_GetTick();
 	uint16_t i = 0;
-
+/*
+	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, RXBuf, RX_BUFF_SIZE);
+	__HAL_DMA_DISABLE_IT(&hdma_usart1_rx, DMA_IT_HT); // Disable half transfer
+*/
+	printf("Starting\n");
 	while (1) {
-		// IF USING I2C
-        if ((HAL_GetTick() - Timer) > 500) {
-            if (!obtainI2CData(&hi2c1, addr, pData, size)) {
-                GNSSData *gnssData = parseNMEAData((char*) pData);
-                if (gnssData != NULL) {
-                    printf("Data:%lf,%lf,%d,%d,%f,%d,%f,%f,%f,%f,%f,%f\r\n", gnssData->latitude,
-                    gnssData->longitude, gnssData->GPStime,
-                    gnssData->satellites, gnssData->altitude,
-                    gnssData->date, gnssData->angle, gnssData->speed,
-                    gnssData->PDOP, gnssData->HDOP, gnssData->VDOP,
-                    gnssData->geoidSep);
-                }
-                free(gnssData);
-                gnssData = NULL;
-            } else {
-                printf("No data\r\n");
-            }
-            Timer = HAL_GetTick();
-		}
+		// USING I2C
+		/*if ((HAL_GetTick() - Timer) > 500) {
+		 HAL_UART_Receive(&huart1, pData, size, 1000);
+		 printf("%s\n", pData);
+		 /*HAL_StatusTypeDef status = HAL_I2C_IsDeviceReady(&hi2c1,
+		 (uint16_t) (addr << 1), 3, 5);
+		 if (status == HAL_OK) {
+		 HAL_I2C_Mem_Read(&hi2c1, (uint16_t) (addr << 1), 0xFD, 1,
+		 &sizeU, sizeof(sizeU), 5);
+		 HAL_I2C_Mem_Read(&hi2c1, (uint16_t) (addr << 1), 0xFE, 1,
+		 &sizeL, sizeof(sizeL), 5);
+		 size = (sizeU << 8) + sizeL;
+		 if (size > 0) {
+		 printf("Data entering of size %d obtained from %d %d\r\n",
+		 size, sizeU, sizeL);
 
-        // IF USING UART
-		while (HAL_UART_Receive(&huart1, pData + i, 1, 100) == HAL_OK && i < size - 1) {
+		 //printf("%s\r\n", pData);
+
+
+
+
+		 /*if (!obtainI2CData(&hi2c1, addr, pData, size)) {
+		 GNSSData *gnssData = parseNMEAData((char*) pData);
+		 if (gnssData != NULL) {
+		 printf("Data:%lf,%lf,%d,%d,%f,%d,%f,%f,%f,%f,%f,%f\r\n", gnssData->latitude,
+		 gnssData->longitude, gnssData->GPStime,
+		 gnssData->satellites, gnssData->altitude,
+		 gnssData->date, gnssData->angle, gnssData->speed,
+		 gnssData->PDOP, gnssData->HDOP, gnssData->VDOP,
+		 gnssData->geoidSep);
+		 }
+		 free(gnssData);
+		 gnssData = NULL;
+		 } else {
+		 printf("No data\r\n");
+		 }*/
+		//Timer = HAL_GetTick();
+		//}
+
+		// USING UART
+
+		while (HAL_UART_Receive(&huart1, MainBuf + i, 1, 100) == HAL_OK && i < MAIN_BUFF_SIZE - 1) {
 			i++;
+			//printf("%d", i);
 		}
-		*(pData + i) = (uint8_t) '\0';
+		*(MainBuf + i) = (uint8_t) '\0';
+		//printf("\n%s\n", MainBuf);
+
 		if ((HAL_GetTick() - Timer) >= 1000) {
+			printf("Parsing GNSS Data\n");
 			i = 0;
 
-			GNSSData *gnssData = parseNMEAData((char*) pData);
+			GNSSData *gnssData = parseNMEAData((char*) MainBuf);
 			if (gnssData != NULL) {
 				printf("Data:%lf,%lf,%ld,%d,%f,%ld,%f,%f,%f,%f,%f,%f\r\n",
 						gnssData->latitude, gnssData->longitude,
@@ -174,17 +252,23 @@ int main(void)
 						gnssData->altitude, gnssData->date, gnssData->angle,
 						gnssData->speed, gnssData->PDOP, gnssData->HDOP,
 						gnssData->VDOP, gnssData->geoidSep);
+				sprintf(MainBuf, "GNSS:%lf,%lf,%ld,%d,%f,%ld,%f,%f,%f,%f,%f,%f",
+						gnssData->latitude, gnssData->longitude,
+						gnssData->GPStime, gnssData->satellites,
+						gnssData->altitude, gnssData->date, gnssData->angle,
+						gnssData->speed, gnssData->PDOP, gnssData->HDOP,
+						gnssData->VDOP, gnssData->geoidSep);
+				HAL_UART_Transmit(&huart4, MainBuf, strlen(MainBuf), 1000); // Transmit data to uart4
+				free(gnssData);
+				gnssData = NULL;
+			} else {
+				printf("%s", MainBuf);
 			}
-			free(gnssData);
-			gnssData = NULL;
-			printf("%s", pData);
-
+			//printf("Done\n");
 			Timer = HAL_GetTick();
 		}
 
 	}
-	free(pData);
-	pData = NULL;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -295,6 +379,54 @@ static void MX_ETH_Init(void)
   /* USER CODE BEGIN ETH_Init 2 */
 
   /* USER CODE END ETH_Init 2 */
+
+}
+
+/**
+  * @brief UART4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART4_Init(void)
+{
+
+  /* USER CODE BEGIN UART4_Init 0 */
+
+  /* USER CODE END UART4_Init 0 */
+
+  /* USER CODE BEGIN UART4_Init 1 */
+
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 115200;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart4.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart4.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart4.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart4, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart4, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  /* USER CODE END UART4_Init 2 */
 
 }
 
@@ -536,14 +668,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USB_OTG_FS_OVCR_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PC10 PC11 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF8_UART4;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PD6 */
   GPIO_InitStruct.Pin = GPIO_PIN_6;

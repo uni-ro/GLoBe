@@ -42,7 +42,7 @@ typedef struct GNSSData {
 } GNSSData;
 
 GNSSData* createGNSSData();
-uint16_t numberOfTokens(char* data, uint16_t length);
+uint16_t numberOfTokens(char* data, uint16_t length, char token);
 uint8_t convertToDegree(const char* data, const char direction, double_t* dest);
 
 char* getQuality(const char data);
@@ -58,5 +58,4 @@ uint8_t nmeaChecksum(const char *data, const uint16_t length);
 Constellation verifyData(const char* data, const uint16_t length);
 // Check if the data is valid and returns the constellation type
 Constellation verifyValidData(const char *data);
-
 #endif /* INC_GNSS_H_ */

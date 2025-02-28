@@ -24,11 +24,11 @@ GNSSData* createGNSSData() {
 	return data;
 }
 
-uint16_t numberOfTokens(char *data, uint16_t length) {
+uint16_t numberOfTokens(char *data, uint16_t length, char token) {
 	uint16_t i;
 	uint16_t t = 0;
 	for (i = 0; i < length; i++) {
-		if (data[i] == ',') {
+		if (data[i] == token) {
 			t++;
 		}
 	}
@@ -131,22 +131,33 @@ uint8_t obtainI2CData(I2C_HandleTypeDef *i2c, uint8_t addr, uint8_t *buf,
 }
 
 uint8_t obtainUARTData(UART_HandleTypeDef *uart, uint8_t *buf, uint16_t size) {
-	uint8_t sizeU = 0;
-	uint8_t sizeL = 0;
-	uint16_t dataSize = 0;
-
+	return 0;
 }
 
 GNSSData* parseNMEAData(char *data) {
 	const char outer_delimiter[] = "\r\n";
 	const char inner_delimiter[] = ",";
-	char *outer_saveptr = NULL;
+
+
+	uint16_t i = 0;
+
+	uint16_t numOfLines = numberOfTokens(data, strlen(data), '$') - 1; // Tokens add one as it assumes another value afterwards
+	uint16_t lineCount = 0;
+	char *lines[numOfLines];
+	i = 0;
+	lines[i] = strsep(&data, outer_delimiter);
+	while (lines[i] != NULL && i < numOfLines) {
+		i++;
+		lines[i] = strsep(&data, outer_delimiter);
+		if (strcmp(lines[i], "") == 0) {
+			lines[i] = strsep(&data, outer_delimiter);
+		}
+	}
 
 	GNSSData *gnssData = createGNSSData();
 	uint8_t status = -1;
 
-	char *line = strtok_r(data, outer_delimiter, &outer_saveptr);
-	char *lineStart = NULL;
+
 
 	// Temporary variables
 	char *error_ptr;
@@ -155,15 +166,18 @@ GNSSData* parseNMEAData(char *data) {
 	uint8_t temp8;
 	uint16_t length;
 	uint16_t tokenNum;
-	uint16_t i = 0;
+
+
+	char *line = lines[lineCount];
+	char *lineStart = NULL;
 
 	while (line != NULL) {
-		lineStart = strchr(line, '$');
-		if (lineStart != NULL) { // Realign $ to be start of message
+		lineStart = strrchr(line, '$');
+		if (lineStart != NULL) { // Realign the last occurence of $ to be start of message
 			line = lineStart;
 		}
 		length = strlen(line); // Length of string
-		tokenNum = numberOfTokens(line, length); // Number of tokens in line
+		tokenNum = numberOfTokens(line, length, ','); // Number of tokens in line
 
 		Constellation constellation = verifyData(line, length); // Check headers to make sure they start in NMEA format
 
@@ -175,8 +189,8 @@ GNSSData* parseNMEAData(char *data) {
 			char *lineArray[tokenNum];
 			i = 0;
 			lineArray[i] = strsep(&line, inner_delimiter);
-			while (lineArray[i] != NULL) {
-				i++;
+			while (lineArray[i] != NULL && i < tokenNum) {
+				i++; // Adds first because there is an extra token at the end?
 				lineArray[i] = strsep(&line, inner_delimiter);
 			}
 
@@ -354,14 +368,15 @@ GNSSData* parseNMEAData(char *data) {
 			}
 
 		}
-		//HAL_Delay(100);
-		//printf("sdasdasdc\n");
-		//HAL_Delay(100);
-//		printf("c\n");
-
-		//	printf("d\n");
-		line = strtok_r(NULL, outer_delimiter, &outer_saveptr);
-		//printf("Next line: %s\r\n", line);
+		HAL_Delay(100);
+		lineCount++;
+		if (lineCount < numOfLines) {
+			line = lines[lineCount];
+			//printf("Next line: %s\r\n", line);
+		} else {
+			line = NULL;
+			//printf("END OF DATA\r\n");
+		}
 	}
 
 	if (status) {
