@@ -35,6 +35,39 @@ uint16_t numberOfTokens(char *data, uint16_t length, char token) {
 	return t + 1;
 }
 
+/**
+ * Searches the given string for all instances of the given token and returns
+ * the number of occurrences.
+ * 
+ * @param string The string to search for the tokens
+ * @param token The token to find within the string
+ * 
+ * @returns The number of times `token` was found in `string`
+ */
+uint16_t numTokens(const char *string, const char * token)
+{
+	uint16_t nTokens = 0;
+	uint16_t i = 0;
+	uint8_t tokenLength = strlen(token);
+
+	char * substr = malloc(sizeof(char) * (tokenLength + 1));
+
+	/* Scan the string for instances of the token, ending with the final token size */
+	for (i = 0; i < strlen(string) - tokenLength + 1; i++)
+	{
+		substr = strncpy(substr, &(string[i]), tokenLength);
+
+		if (strcmp(token, substr) == 0)
+		{
+			nTokens++;
+		}
+	}
+
+	free(substr);
+
+	return nTokens;
+}
+
 uint8_t convertToDegree(const char *data, const char direction, double_t *dest) {
 	char *error_ptr;
 	uint8_t whole = (uint8_t) (strtol(data, &error_ptr, 10) / 100); //Safely convert to whole number, atoi is unsafe
@@ -132,6 +165,68 @@ uint8_t obtainI2CData(I2C_HandleTypeDef *i2c, uint8_t addr, uint8_t *buf,
 
 uint8_t obtainUARTData(UART_HandleTypeDef *uart, uint8_t *buf, uint16_t size) {
 	return 0;
+}
+
+/**
+ * Splits the given string into an array of strings at each instance of delim.
+ *
+ * @param string The string that is going to be split.
+ * @param delim The delimiter to split at, removing the given delimiter.
+ * @param arr_size A pointer that will be populated with the resulting size of the array.
+ *
+ * @returns An array of strings split at the delimiter.
+ *
+ * @note This keeps the array of strings within the bounds of the original string.
+ * ```
+ * 		 For example, "This * string" becomes ["This ", " string"] at the same address.
+ * 		 To clarify, "This * string" actually becomes "This \0 string"
+ * 					  ^                                ^      ^
+ * 		 where the '^' character indicates the position of each pointer.
+ * ```
+ * 		 Notice that initially
+ * 		 there is 1 pointer as it is 1 string, but the second instance contains 2 pointers
+ * 		 as this essentially becomes an array of pointers pointing to different locations
+ * 		 within the same string.
+ * 		 As such, to free the data that has been allocated, only both the return value and its
+ * 		 first element must be freed. This is evident in the below example:
+ *
+ * ```
+ * 		char ** arr = splitString("This * string", "*", 2);
+ *
+ * 		free(*arr);
+ * 		free(arr);
+ * ```
+ *
+ * @note This functionality is subject to change
+ */
+char ** splitString(const char * string, const char * delim, uint16_t * arr_size)
+{
+	uint16_t nParts = numTokens(string, delim) + 1; /* For n splits, there are n+1 sections */
+
+	/* Create copy of input string for strsep to use */
+	char * input = malloc(sizeof(char) * (strlen(string) + 1));
+	input = strcpy(input, string);
+
+	char ** strings = malloc(sizeof(char *) * nParts);
+
+    uint16_t i = 0;
+
+	strings[i] = strsep(&input, delim);
+
+    i = 1;
+
+	while (strings[i - 1] != NULL && i < nParts) {
+        strings[i] = strsep(&input, delim);
+		if (strcmp(strings[i], "") == 0) {
+			strings[i] = strsep(&input, delim);
+		}
+		i++;
+	}
+
+    *arr_size = nParts;
+
+
+	return strings;
 }
 
 GNSSData* parseNMEAData(char *data) {

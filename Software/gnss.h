@@ -43,6 +43,7 @@ typedef struct GNSSData {
 
 GNSSData* createGNSSData();
 uint16_t numberOfTokens(char* data, uint16_t length, char token);
+uint16_t numTokens(const char* string, const char * token);
 uint8_t convertToDegree(const char* data, const char direction, double_t* dest);
 
 char* getQuality(const char data);
@@ -50,6 +51,8 @@ char* getQuality(const char data);
 void scanI2C(I2C_HandleTypeDef* i2c);
 uint8_t obtainI2CData(I2C_HandleTypeDef *i2c, uint8_t addr, uint8_t *buf, uint16_t size);
 uint8_t obtainUARTData(UART_HandleTypeDef *uart, uint8_t *buf, uint16_t size);
+
+char ** splitString(const char * string, const char * delim, uint16_t * arr_size);
 
 GNSSData* parseNMEAData(char* data);
 // Does NMEA checksum to make sure data is correctly received
