@@ -24,7 +24,7 @@ GNSSData* createGNSSData() {
 	return data;
 }
 
-uint16_t numberOfTokens(char *data, uint16_t length, char token) {
+uint16_t numberOfTokens(const char *data, const uint16_t length, const char token) {
 	uint16_t i;
 	uint16_t t = 0;
 	for (i = 0; i < length; i++) {
@@ -229,7 +229,7 @@ char ** splitString(const char * string, const char * delim, uint16_t * arr_size
 	return strings;
 }
 
-GNSSData* parseNMEAData(char *data) {
+GNSSData* parseNMEAData(const char *data) {
 	const char outer_delimiter[] = "\r\n";
 	const char inner_delimiter[] = ",";
 
