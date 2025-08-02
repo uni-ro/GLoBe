@@ -236,18 +236,10 @@ GNSSData* parseNMEAData(const char *data) {
 
 	uint16_t i = 0;
 
-	uint16_t numOfLines = numberOfTokens(data, strlen(data), '$') - 1; // Tokens add one as it assumes another value afterwards
+	uint16_t numOfLines = 0;
 	uint16_t lineCount = 0;
-	char *lines[numOfLines];
-	i = 0;
-	lines[i] = strsep(&data, outer_delimiter);
-	while (lines[i] != NULL && i < numOfLines) {
-		i++;
-		lines[i] = strsep(&data, outer_delimiter);
-		if (strcmp(lines[i], "") == 0) {
-			lines[i] = strsep(&data, outer_delimiter);
-		}
-	}
+
+	char ** lines = splitString(data, outer_delimiter, &numOfLines);
 
 	GNSSData *gnssData = createGNSSData();
 	uint8_t status = -1;
@@ -479,6 +471,10 @@ GNSSData* parseNMEAData(const char *data) {
 		free(gnssData);
 		gnssData = NULL;
 	}
+
+	free(*lines);
+	free(lines);
+
 	return gnssData;
 }
 
