@@ -492,6 +492,70 @@ uint8_t nmeaChecksum(const char *data, const uint16_t length) {
 	return -1;
 }
 
+/**
+ * Verifies the format of the given NMEA message.
+ *
+ * @param data The message to check for the correct format
+ *
+ * @returns 0 if the message is of the correct format and -1 if it is not.
+ * 
+ * @note This will be deprecated once a regex version of this is implemented
+ * 		 in c++ as currently stm32 ide does not recognise the regex.h include.
+ */
+int8_t verifyFormat(const char *data)
+{
+	uint8_t i;
+	uint8_t nCorrect;
+	char * found;
+
+	if (data != NULL)
+	{
+		// Ensure that at least the header and checksum are included ie. $TTSSS,*XX
+		if (strlen(data) >= 10)
+		{
+			// Ensure the message begins with '$'
+			if (*data == '$')
+			{
+				nCorrect = 0;
+		
+				// Ensure that the next 5 chars are either numeric or capital letters
+				for (i = 1; i < 6; i++)
+				{
+					if (isdigit(data[i]) || isupper(data[i]))
+					{
+						nCorrect++;
+					}
+				}
+		
+				if (nCorrect == 5)
+				{
+					// Ensure that the following character is a ','
+					if (data[6] == ',')
+					{
+						found = strchr(data, '*');
+		
+						/* NOTE: Almost certainly the \r\n will end the line and should be considered part
+						of the format. This will need to be rectified, but at the moment either with or
+						without will pass the check.*/
+
+						// Ensure there exists a '*' character and contains enough values for a checksum
+						if (found != NULL && strlen(found) >= 3)
+						{
+							// Ensure the checksum is hexadecimal
+							if (isxdigit(found[1]) && isxdigit(found[2]))
+							{
+								return 0;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return -1;
+}
+
 Constellation verifyData(const char *data, const uint16_t length) {
 	if (length > 9) { //6 for the $GXXXX and 3 for *XX
 		if (nmeaChecksum(data, length) == 0) {

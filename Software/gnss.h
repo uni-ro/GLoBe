@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "string.h"
 #include "stm32h7xx_hal.h"
 
@@ -58,6 +59,7 @@ char ** splitString(const char * string, const char * delim, uint16_t * arr_size
 GNSSData* parseNMEAData(const char* data);
 // Does NMEA checksum to make sure data is correctly received
 uint8_t nmeaChecksum(const char *data, const uint16_t length);
+int8_t verifyFormat(const char *data);
 // Verifies data separated by NMEA messages and removes invalid or incorrect data
 Constellation verifyData(const char* data, const uint16_t length);
 // Check if the data is valid and returns the constellation type
