@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "string.h"
 #include "stm32h7xx_hal.h"
 
