@@ -573,6 +573,36 @@ Constellation verifyData(const char *data, const uint16_t length) {
 	return INVALID;
 }
 
+/**
+ * Converts the given header to a constellation
+ * 
+ * @param header The header from which to extract the constellation in
+ * 				 the format: $TTSSS
+ * 
+ * @returns The constellation from the header or INVALID if it cannot be
+ * 			determined.
+ * 
+ * @note This function assumes correct format of the header as $TTSSS
+ */
+Constellation convertConstellation(const char *header)
+{	
+	static const uint8_t nConstellations = 6;
+	static const char constels[6][3] = {"GP", "GL", "GA", "GB", "BD", "GN"};
+	static const Constellation constellations[6] = {GPS, GLONASS, GALILEO, BEIDOU, BEIDOU, NONE};
+
+	uint8_t i;
+
+	for (i = 0; i < nConstellations; i++)
+	{
+		if (strncmp(constels[i], header + 1, 2) == 0)
+		{
+			return constellations[i];
+		}
+	}
+
+	return INVALID;
+}
+
 Constellation verifyValidData(const char *data) {
 	Constellation constellation = INVALID;
 	/*char* head[4] = { 0 };

@@ -62,6 +62,7 @@ uint8_t nmeaChecksum(const char *data, const uint16_t length);
 int8_t verifyFormat(const char *data);
 // Verifies data separated by NMEA messages and removes invalid or incorrect data
 Constellation verifyData(const char* data, const uint16_t length);
+Constellation convertConstellation(const char *header);
 // Check if the data is valid and returns the constellation type
 Constellation verifyValidData(const char *data);
 #endif /* INC_GNSS_H_ */
