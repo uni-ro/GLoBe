@@ -57,6 +57,13 @@ uint8_t obtainUARTData(UART_HandleTypeDef *uart, uint8_t *buf, uint16_t size);
 char ** splitString(const char * string, const char * delim, uint16_t * arr_size);
 
 GNSSData* parseNMEAData(const char* data);
+char * getOpMode(char type);
+char * getID(char type);
+uint8_t captureGSAData(char ** lineArr, uint16_t length, GNSSData * gnssData);
+uint8_t captureVTGData(char ** lineArr, uint16_t length, GNSSData * gnssData);
+uint16_t captureGGAData(char ** lineArr, uint16_t length, GNSSData * gnssData);
+uint8_t captureRMCData(char ** lineArr, uint16_t length, GNSSData * gnssData);
+uint8_t captureGLLData(char ** lineArr, uint16_t length, GNSSData * gnssData);
 // Does NMEA checksum to make sure data is correctly received
 uint8_t nmeaChecksum(const char *data, const uint16_t length);
 int8_t verifyFormat(const char *data);

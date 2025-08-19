@@ -478,6 +478,421 @@ GNSSData* parseNMEAData(const char *data) {
 	return gnssData;
 }
 
+char * getOpMode(char type)
+{
+	switch (type)
+	{
+		case 'M':
+			return "Manual";
+		case 'A':
+			return "Automatic";
+		default:
+			return "Unknown";
+	}
+}
+
+char * getID(char type)
+{
+	switch(type)
+	{
+		case '1':
+			return "GPS";
+		case '2':
+			return "GLONASS";
+		case '3':
+			return "GALILEO";
+		case '5':
+			return "BEIDOU";
+		default:
+			return "Unknown";
+	}
+}
+
+/**
+ * Captures important data from the given lineArr and sets the relevant
+ * gnssData struct fields for the GSA sentence.
+ * 
+ * @param lineArr The line array that contains all information for the sentence
+ * @param length The length of the line array
+ * @param gnssData The struct in which to place the captured data
+ * 
+ * @returns An error code depending on which field was not correctly converted. See below:
+ * 
+ * 		00000000 -> No error, the data was captured successfully.
+ * 		00000001 -> There was no fix for this sentence, hence no useful data.
+ * 		00000010 -> The PDOP field was not correctly converted.
+ * 		00000100 -> The HDOP field was not correctly converted.
+ * 		00001000 -> The VDOP field was not correctly converted.
+ * 
+ * 		The error code may be a logical OR of any of these flags.
+ */
+uint8_t captureGSAData(char ** lineArr, uint16_t length, GNSSData * gnssData)
+{
+	char * unconverted;
+	float_t converted;
+	uint8_t errCode = 0;
+
+	/* If the navMode has no fix, return */
+	if (*lineArr[2] == '1')
+	{
+		return errCode | 1;
+	}
+
+	strcpy(gnssData->quality, getOpMode(*lineArr[1]));
+
+	converted = strtof(lineArr[15], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->PDOP = converted;
+	}
+	else {errCode |= 1 << 2;}
+
+
+	converted = strtof(lineArr[16], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->HDOP = converted;
+	}
+	else {errCode |= 1 << 3;}
+
+	
+	converted = strtof(lineArr[17], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->VDOP = converted;
+	}
+	else {errCode |= 1 << 4;}
+
+	strcpy(gnssData->ID, getID(*lineArr[18]));
+
+	return errCode;
+}
+
+/**
+ * Captures important data from the given lineArr and sets the relevant
+ * gnssData struct fields for the VTG sentence.
+ * 
+ * @param lineArr The line array that contains all information for the sentence
+ * @param length The length of the line array
+ * @param gnssData The struct in which to place the captured data
+ * 
+ * @returns An error code depending on which field was not correctly converted. See below:
+ * 
+ * 		00000000 -> No error, the data was captured successfully.
+ * 		00000001 -> The course over ground (true) was not correctly converted.
+ * 		00000010 -> The course over ground (magnetic) was not correctly converted.
+ * 		00000100 -> The speed over ground was not correctly converted.
+ * 		00001000 -> The mode indicator could not be correctly determined.
+ * 
+ * 		The error code may be a logical OR of any of these flags.
+ */
+uint8_t captureVTGData(char ** lineArr, uint16_t length, GNSSData * gnssData)
+{
+	char * unconverted;
+	float_t converted;
+	uint8_t errCode = 0;
+
+	converted = strtof(lineArr[1], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->angle = converted;
+	}
+	else {errCode |= 1;}
+
+
+	converted = strtof(lineArr[3], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->magnetic = converted;
+	}
+	else {errCode |= 1 << 2;}
+
+
+	converted = strtof(lineArr[5], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->speed = converted;
+	}
+	else {errCode |= 1 << 3;}
+
+
+	char *quality = getQuality(*lineArr[9]);
+	if (*quality != '\0')
+	{
+		strcpy(gnssData->quality, quality);
+	}
+	else {errCode |= 1 << 4;}
+
+
+	return errCode;
+}
+
+/**
+ * Captures important data from the given lineArr and sets the relevant
+ * gnssData struct fields for the GGA sentence.
+ * 
+ * @param lineArr The line array that contains all information for the sentence
+ * @param length The length of the line array
+ * @param gnssData The struct in which to place the captured data
+ * 
+ * @returns An error code depending on which field was not correctly converted. See below:
+ * 
+ * 		0x0000 -> No error, the data was captured successfully.
+ * 		0x0001 -> There was no fix for this sentence, hence no useful data.
+ * 		0x0002 -> The time was not correctly converted.
+ *		0x0004 -> The quality could not be correctly determined.
+ * 		0x0008 -> The number of satellites could not be correctly determined.
+ * 		0x0010 -> The HDOP field was not correctly converted.
+ * 		0x0020 -> The altitude was not correctly converted.
+ * 		0x0040 -> The geoid separation was not correctly converted.
+ * 		0x0080 -> The age of differential stations could not be correctly determined.
+ * 		0x0100 -> The ID of the differential station could not be correctly determined.
+ * 
+ * 		The error code may be a logical OR of any of these flags.
+ */
+uint16_t captureGGAData(char ** lineArr, uint16_t length, GNSSData * gnssData)
+{
+	char * unconverted;
+	float_t converted;
+	uint32_t convertedLong;
+	uint8_t errCode = 0;
+
+	/* If the quality has no fix, return */
+	if (*lineArr[6] == '0')
+	{
+		return errCode | 1;
+	}
+
+	
+	convertedLong = strtol(lineArr[1], &unconverted, 10);
+	if (*unconverted == '.')
+	{
+		gnssData->GPStime = convertedLong;
+	}
+	else {errCode |= 1 << 2;}
+
+
+	convertToDegree(lineArr[2], *lineArr[3],
+			&(gnssData->latitude));
+	convertToDegree(lineArr[4], *lineArr[5],
+			&(gnssData->longitude));
+
+	
+	char *quality = getQuality(*lineArr[6]);
+	if (quality[0] != '\0')
+	{
+		strcpy(gnssData->quality, quality);
+	}
+	else {errCode |= 1 << 3;}
+
+
+	convertedLong = strtol(lineArr[7], &unconverted, 10);
+	if (*unconverted == '\0')
+	{
+		gnssData->satellites = (uint8_t) convertedLong;
+	}
+	else {errCode |= 1 << 4;}
+
+
+	converted = strtof(lineArr[8], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->HDOP = converted;
+	}
+	else {errCode |= 1 << 5;}
+
+
+	converted = strtof(lineArr[9], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->altitude = converted;
+	}
+	else {errCode |= 1 << 6;}
+
+
+	converted = strtof(lineArr[11], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->geoidSep = converted;
+	}
+	else {errCode |= 1 << 7;}
+
+
+	convertedLong = strtol(lineArr[13], &unconverted, 10);
+	if (*unconverted == '\0')
+	{
+		gnssData->diffTime = (uint8_t) convertedLong;
+	}
+	else {errCode |= 1 << 8;}
+
+
+	convertedLong = strtol(lineArr[14], &unconverted, 10);
+	if (*unconverted == '*')
+	{
+		gnssData->diffID = (uint8_t) convertedLong;
+	}
+	else {errCode |= 1 << 9;}
+	
+
+	return errCode;
+}
+
+/**
+ * Captures important data from the given lineArr and sets the relevant
+ * gnssData struct fields for the RMC sentence.
+ * 
+ * @param lineArr The line array that contains all information for the sentence
+ * @param length The length of the line array
+ * @param gnssData The struct in which to place the captured data
+ * 
+ * @returns An error code depending on which field was not correctly converted. See below:
+ * 
+ * 		00000000 -> No error, the data was captured successfully.
+ * 		00000001 -> The data provided was not valid.
+ * 		00000010 -> The time was not correctly converted.
+ *		00000100 -> There was no position fix.
+ * 		00001000 -> The speed over ground could not be correctly determined.
+ * 		00010000 -> The course over ground could not be correctly determined.
+ * 		00100000 -> The date was not correctly converted.
+ * 		01000000 -> The magnetic variation could not be correctly determined.
+ * 		10000000 -> The position mode could not be correctly determined.
+ * 
+ * 		The error code may be a logical OR of any of these flags.
+ */
+uint8_t captureRMCData(char ** lineArr, uint16_t length, GNSSData * gnssData)
+{
+	char * unconverted;
+	float_t converted;
+	uint32_t convertedLong;
+	uint8_t errCode = 0;
+
+	/* If the data is not valid, return */
+	if (*lineArr[2] != 'A')
+	{
+		return errCode | 1;
+	}
+	
+	/* If the data has a time fix, save the time fix */
+	convertedLong = strtol(lineArr[1], &unconverted, 10);
+	if (*unconverted == '.')
+	{
+		gnssData->GPStime = convertedLong;
+	}
+	else {errCode |= 1 << 2;}
+
+	/* If the data has no position fix, return */
+	if (*lineArr[12] == 'N')
+	{
+		return errCode | 1 << 3;
+	}
+
+	
+	convertToDegree(lineArr[3], *lineArr[4],
+			&(gnssData->latitude));
+	convertToDegree(lineArr[5], *lineArr[6],
+			&(gnssData->longitude));
+	
+	
+	converted = strtof(lineArr[7], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->speed = converted;
+	}
+	else {errCode |= 1 << 4;}
+
+
+	converted = strtof(lineArr[8], &unconverted);
+	if (*unconverted == '\0')
+	{
+		gnssData->angle = converted;
+	}
+	else {errCode |= 1 << 5;}
+
+
+	convertedLong = strtol(lineArr[9], &unconverted, 10);
+	if (*unconverted == '\0')
+	{
+		gnssData->date = convertedLong;
+	}
+	else {errCode |= 1 << 6;}
+
+
+	/* Convert the magnetic variation to a float - negative if the direction is West */
+	converted = strtof(lineArr[10], &unconverted);
+	if (*unconverted == '\0')
+	{
+		if (*lineArr[11] == 'W')
+		{
+			converted *= -1;
+		}
+		gnssData->magnetic = converted;
+	}
+	else {errCode |= 1 << 7;}
+
+
+	char *quality = getQuality(*lineArr[12]);
+	if (quality[0] != '\0')
+	{
+		strcpy(gnssData->quality, quality);
+	}
+	else {errCode |= 1 << 8;}
+	
+
+	return errCode;
+}
+
+/**
+ * Captures important data from the given lineArr and sets the relevant
+ * gnssData struct fields for the GLL sentence.
+ * 
+ * @param lineArr The line array that contains all information for the sentence
+ * @param length The length of the line array
+ * @param gnssData The struct in which to place the captured data
+ * 
+ * @returns An error code depending on which field was not correctly converted. See below:
+ * 
+ * 		00000000 -> No error, the data was captured successfully.
+ * 		00000001 -> The position data was not correctly converted.
+ * 		00000010 -> The time data was not correctly converted.
+ * 
+ * 		The error code may be a logical OR of any of these flags.
+ */
+uint8_t captureGLLData(char ** lineArr, uint16_t length, GNSSData * gnssData)
+{
+	char * unconverted;
+	uint32_t converted;
+	uint8_t errCode = 0;
+
+	
+	if (*lineArr[6] == 'A')
+	{
+		convertToDegree(lineArr[1], *lineArr[2],
+				&(gnssData->latitude));
+		convertToDegree(lineArr[3], *lineArr[4],
+				&(gnssData->longitude));
+		
+		
+		converted = strtol(lineArr[5], &unconverted, 10);
+		if (*unconverted == '.')
+		{
+			gnssData->GPStime = converted;
+		}
+		else {errCode |= 1;}
+	}
+	else if (*lineArr[5] != '\0')
+	{
+		converted = strtol(lineArr[5], &unconverted, 10);
+		if (*unconverted == '.')
+		{
+			gnssData->GPStime = converted;	
+		}
+		else {errCode |= 1 << 2;}
+	}
+	
+
+	return errCode;
+}
+
 uint8_t nmeaChecksum(const char *data, const uint16_t length) {
 	uint16_t i;
 	uint8_t check = 0;
