@@ -237,13 +237,13 @@ char ** splitString(const char * string, const char * delim, uint16_t * arr_size
 	char * input = calloc(strlen(string) + 1, sizeof(char));
 	input = strcpy(input, string);
 
-	/* If the string ends with the delimiter and no string proceeds it, create only n sections
+	/* If the string ends with the delimiter, create only n sections
 	 * For example, Foo\r with delimiter as '\r' returns an array of size 2.
 	 * 		Element 0 is: Foo 
 	 * 		Element 1 is: \0
 	 * 		Hence, the array size should be corrected to 1 instead of 2.
 	 */
-	if (strlen(input + (nParts - 1)) == 0)
+	if (strcmp(input + strlen(input) - strlen(delim), delim) == 0)
 	{
 		nParts--;
 	}
