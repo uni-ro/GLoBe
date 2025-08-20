@@ -44,29 +44,23 @@ uint16_t numberOfTokens(const char *data, const uint16_t length, const char toke
  * @param delim The delimiter to stop at and to replace.
  * 
  * @returns The part of the string that was skipped.
+ * 
+ * @note The function will point past a string if the final character
+ * 		 is not a null byte (\0).
  */
 char * strnext(char ** input, const char * delim)
 {
 	char * string = *input;
-	uint16_t i = 0;
+	char * found;
 	uint8_t delimLength = strlen(delim);
 
-	char * substr = calloc(delimLength + 1, sizeof(char));
+	found = strstr(*input, delim);
 
-	/* Scan the string for instances of the delim, ending with the final token size */
-	for (i = 0; i < strlen(*input) - delimLength + 1; i++)
+	if (found != NULL)
 	{
-		substr = strncpy(substr, *input + i, delimLength);
-
-		if (strcmp(delim, substr) == 0)
-		{
-			(*input)[i] = '\0';
-			*input = *input + i + delimLength;
-			break;
-		}
+		*found = '\0';
+		*input = found + delimLength;
 	}
-
-	free(substr);
 
 	return string;
 }
