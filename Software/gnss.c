@@ -36,6 +36,42 @@ uint16_t numberOfTokens(const char *data, const uint16_t length, const char toke
 }
 
 /**
+ * Similar to `strsep` - updates the input string to point past the
+ * delimiter string and sets the delimiter part to \0. Uses the entire
+ * delim instead of only one of the characters from it like `strsep`.
+ * 
+ * @param input The input string to update past the delim.
+ * @param delim The delimiter to stop at and to replace.
+ * 
+ * @returns The part of the string that was skipped.
+ */
+char * strnext(char ** input, const char * delim)
+{
+	char * string = *input;
+	uint16_t i = 0;
+	uint8_t delimLength = strlen(delim);
+
+	char * substr = calloc(delimLength + 1, sizeof(char));
+
+	/* Scan the string for instances of the delim, ending with the final token size */
+	for (i = 0; i < strlen(*input) - delimLength + 1; i++)
+	{
+		substr = strncpy(substr, *input + i, delimLength);
+
+		if (strcmp(delim, substr) == 0)
+		{
+			(*input)[i] = '\0';
+			*input = *input + i + delimLength;
+			break;
+		}
+	}
+
+	free(substr);
+
+	return string;
+}
+
+/**
  * Searches the given string for all instances of the given token and returns
  * the number of occurrences.
  * 
@@ -50,7 +86,7 @@ uint16_t numTokens(const char *string, const char * token)
 	uint16_t i = 0;
 	uint8_t tokenLength = strlen(token);
 
-	char * substr = malloc(sizeof(char) * (tokenLength + 1));
+	char * substr = calloc(tokenLength + 1, sizeof(char));
 
 	/* Scan the string for instances of the token, ending with the final token size */
 	for (i = 0; i < strlen(string) - tokenLength + 1; i++)
@@ -204,23 +240,27 @@ char ** splitString(const char * string, const char * delim, uint16_t * arr_size
 	uint16_t nParts = numTokens(string, delim) + 1; /* For n splits, there are n+1 sections */
 
 	/* Create copy of input string for strsep to use */
-	char * input = malloc(sizeof(char) * (strlen(string) + 1));
+	char * input = calloc(strlen(string) + 1, sizeof(char));
 	input = strcpy(input, string);
 
-	char ** strings = malloc(sizeof(char *) * nParts);
+	/* If the string ends with the delimiter and no string proceeds it, create only n sections
+	 * For example, Foo\r with delimiter as '\r' returns an array of size 2.
+	 * 		Element 0 is: Foo 
+	 * 		Element 1 is: \0
+	 * 		Hence, the array size should be corrected to 1 instead of 2.
+	 */
+	if (strlen(input + (nParts - 1)) == 0)
+	{
+		nParts--;
+	}
+
+	char ** strings = calloc(nParts, sizeof(char *));
 
     uint16_t i = 0;
 
-	strings[i] = strsep(&input, delim);
-
-    i = 1;
-
-	while (strings[i - 1] != NULL && i < nParts) {
-        strings[i] = strsep(&input, delim);
-		if (strcmp(strings[i], "") == 0) {
-			strings[i] = strsep(&input, delim);
-		}
-		i++;
+	for (i = 0; i < nParts; i++)
+	{
+		strings[i] = strnext(&input, delim);
 	}
 
     *arr_size = nParts;

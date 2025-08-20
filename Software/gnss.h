@@ -45,6 +45,7 @@ typedef struct GNSSData {
 
 GNSSData* createGNSSData();
 uint16_t numberOfTokens(const char* data, const uint16_t length, const char token);
+char * strnext(char ** input, const char * delim);
 uint16_t numTokens(const char* string, const char * token);
 uint8_t convertToDegree(const char* data, const char direction, double_t* dest);
 
