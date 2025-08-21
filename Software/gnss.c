@@ -80,7 +80,7 @@ uint16_t numTokens(const char *string, const char * token)
 	uint16_t i = 0;
 	uint8_t tokenLength = strlen(token);
 
-	char * substr = calloc(tokenLength + 1, sizeof(char));
+	char * substr = (char *) calloc(tokenLength + 1, sizeof(char));
 
 	/* Scan the string for instances of the token, ending with the final token size */
 	for (i = 0; i < strlen(string) - tokenLength + 1; i++)
@@ -234,7 +234,7 @@ char ** splitString(const char * string, const char * delim, uint16_t * arr_size
 	uint16_t nParts = numTokens(string, delim) + 1; /* For n splits, there are n+1 sections */
 
 	/* Create copy of input string for strsep to use */
-	char * input = calloc(strlen(string) + 1, sizeof(char));
+	char * input = (char *) calloc(strlen(string) + 1, sizeof(char));
 	input = strcpy(input, string);
 
 	/* If the string ends with the delimiter, create only n sections
@@ -248,7 +248,7 @@ char ** splitString(const char * string, const char * delim, uint16_t * arr_size
 		nParts--;
 	}
 
-	char ** strings = calloc(nParts, sizeof(char *));
+	char ** strings = (char **) calloc(nParts, sizeof(char *));
 
     uint16_t i = 0;
 
