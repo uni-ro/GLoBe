@@ -835,23 +835,6 @@ int8_t verifyFormat(const char *data)
 	return -1;
 }
 
-Constellation verifyData(const char *data, const uint16_t length) {
-	if (length > 9) { //6 for the $GXXXX and 3 for *XX
-		if (nmeaChecksum(data, length) == 0) {
-			if (strncmp("$GNTXT", data, 6) == 0) {
-				printf("%s\r\n", data); //Print out any GNTXT data
-				return INVALID;
-			} else {
-				return verifyValidData(data);
-			}
-		} else {
-			printf("Failed NMEA - ");
-		}
-	}
-	printf("Invalid data: %s\r\n", data);
-	return INVALID;
-}
-
 /**
  * Converts the given header to a constellation
  * 
