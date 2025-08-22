@@ -53,7 +53,7 @@ uint8_t convertToDegree(const char* data, const char direction, double_t* dest);
 char* getQuality(const char data);
 
 uint8_t obtainUARTData(UART_HandleTypeDef *uart, uint8_t *buf, uint16_t size);
-Sentences getSentenceType(const char * header)
+Sentences getSentenceType(const char * header);
 
 char ** splitString(const char * string, const char * delim, uint16_t * arr_size);
 
