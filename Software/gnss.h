@@ -16,6 +16,7 @@
 #include "stm32h7xx_hal.h"
 
 typedef enum {INVALID, NONE, GPS, GLONASS, GALILEO, BEIDOU} Constellation;
+typedef enum {INV, DTM, GAQ, GBQ, GBS, GGA, GLL, GLQ, GNQ, GNS, GPQ, GRS, GSA, GST, GSV, RLM, RMC, TXT, VLW, VTG, ZDA} Sentences;
 
 typedef struct GNSSData {
 	Constellation constellation;
@@ -51,9 +52,8 @@ uint8_t convertToDegree(const char* data, const char direction, double_t* dest);
 
 char* getQuality(const char data);
 
-void scanI2C(I2C_HandleTypeDef* i2c);
-uint8_t obtainI2CData(I2C_HandleTypeDef *i2c, uint8_t addr, uint8_t *buf, uint16_t size);
 uint8_t obtainUARTData(UART_HandleTypeDef *uart, uint8_t *buf, uint16_t size);
+Sentences getSentenceType(const char * header)
 
 char ** splitString(const char * string, const char * delim, uint16_t * arr_size);
 

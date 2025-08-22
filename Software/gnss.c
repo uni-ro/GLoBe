@@ -140,51 +140,40 @@ char* getQuality(const char data) {
 
 /* Reading data */
 
-void scanI2C(I2C_HandleTypeDef *i2c) {
-	uint8_t i = 0;
-
-	/*-[ I2C Bus Scanning ]-*/
-	for (i = 1; i < 128; i++) {
-		if (HAL_I2C_IsDeviceReady(i2c, (uint16_t) (i << 1), 3, 5) == HAL_OK) {
-			printf("0x%X\r\n", i);
-		}
-	}
-	/*--[ Scanning Done ]--*/
-}
-
-uint8_t obtainI2CData(I2C_HandleTypeDef *i2c, uint8_t addr, uint8_t *buf,
-		uint16_t size) {
-	HAL_StatusTypeDef status = HAL_I2C_IsDeviceReady(i2c,
-			(uint16_t) (addr << 1), 3, 5);
-	uint8_t sizeU = 0;
-	uint8_t sizeL = 0;
-	uint16_t dataSize = 0;
-	if (status == HAL_OK) {
-		HAL_I2C_Mem_Read(i2c, (uint16_t) (addr << 1), 0xFD, 1, &sizeU,
-				sizeof(sizeU), 5);
-		HAL_I2C_Mem_Read(i2c, (uint16_t) (addr << 1), 0xFE, 1, &sizeL,
-				sizeof(sizeL), 5);
-		dataSize = (sizeU << 8) + sizeL;
-		if (dataSize > 0) {
-			/*printf("Data entering of size %d obtained from %d %d\r\n", dataSize,
-			 sizeU, sizeL);*/
-			//HAL_I2C_Mem_Read(&hi2c1, (uint16_t)(addr<<1), 0xFF, 1, pData, size, 1000);
-			if (dataSize > size) {
-				printf("Too much data: %d, buffer too small\r\n", dataSize);
-				dataSize = size;
-			}
-			HAL_I2C_Mem_Read(i2c, (uint16_t) (addr << 1), 0xFF, 1, buf,
-					dataSize, 1000);
-			return 0;
-		}
-	} else {
-		printf("Bad status: %d\r\n", status);
-	}
-	return -1;
-}
-
 uint8_t obtainUARTData(UART_HandleTypeDef *uart, uint8_t *buf, uint16_t size) {
 	return 0;
+}
+
+Sentences getSentenceType(const char * header)
+{
+	char type[4];
+
+	strncpy(type, header + 3, 3);
+
+	if (strcmp(type, "GSA") == 0)
+	{
+		return GSA;
+	}
+	else if (strcmp(type, "VTG") == 0)
+	{
+		return VTG;
+	}
+	else if (strcmp(type, "GGA") == 0)
+	{
+		return GGA;
+	}
+	else if (strcmp(type, "RMC") == 0)
+	{
+		return RMC;
+	}
+	else if (strcmp(type, "GLL") == 0)
+	{
+		return GLL;
+	}
+	else
+	{
+		return INV;
+	}
 }
 
 /**
