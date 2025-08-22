@@ -119,33 +119,23 @@ uint8_t convertToDegree(const char *data, const char direction, double_t *dest) 
 }
 
 char* getQuality(const char data) {
-	if (data == '0') {
-		return "No fix";
-	} else if (data == '1') {
-		return "Autonomous";
-	} else if (data == '2') {
-		return "Differential";
-	} else if (data == '4') {
-		return "RTK fixed";
-	} else if (data == '5') {
-		return "RTK Float";
-	} else if (data == '6') {
-		return "Estimated";
+	switch (data)
+	{
+		case '0': case 'N':
+			return "No fix";
+		case '1': case 'A':
+			return "Autonomous";
+		case '2': case 'D':
+			return "Differential";
+		case '4': case 'R':
+			return "RTK fixed";
+		case '5': case 'F':
+			return "RTK Float";
+		case '6': case 'E':
+			return "Estimated";
+		default:
+			return '\0';
 	}
-	if (data == 'N') {
-		return "No fix";
-	} else if (data == 'A') {
-		return "Autonomous";
-	} else if (data == 'D') {
-		return "Differential";
-	} else if (data == 'R') {
-		return "RTK fixed";
-	} else if (data == 'F') {
-		return "RTK Float";
-	} else if (data == 'E') {
-		return "Estimated";
-	}
-	return '\0';
 }
 
 /* Reading data */
