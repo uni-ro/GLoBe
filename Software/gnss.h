@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include <math.h>
 #include "string.h"
+#include "stringslib.h"
 
 typedef enum {INVALID, NONE, GPS, GLONASS, GALILEO, BEIDOU} Constellation;
 typedef enum {INV, DTM, GAQ, GBQ, GBS, GGA, GLL, GLQ, GNQ, GNS, GPQ, GRS, GSA, GST, GSV, RLM, RMC, TXT, VLW, VTG, ZDA} Sentences;
