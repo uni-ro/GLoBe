@@ -45,15 +45,11 @@ typedef struct GNSSData {
 } GNSSData;
 
 GNSSData* createGNSSData();
-char * strnext(char ** input, const char * delim);
-uint16_t numTokens(const char* string, const char * token);
 uint8_t convertToDegree(const char* data, const char direction, double_t* dest);
 
 char* getQuality(const char data);
 
 Sentences getSentenceType(const char * header);
-
-char ** splitString(const char * string, const char * delim, uint16_t * arr_size);
 
 GNSSData* parseNMEAData(const char* data);
 char * getOpMode(char type);
