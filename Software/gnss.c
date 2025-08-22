@@ -138,12 +138,6 @@ char* getQuality(const char data) {
 	}
 }
 
-/* Reading data */
-
-uint8_t obtainUARTData(UART_HandleTypeDef *uart, uint8_t *buf, uint16_t size) {
-	return 0;
-}
-
 Sentences getSentenceType(const char * header)
 {
 	char type[4];
