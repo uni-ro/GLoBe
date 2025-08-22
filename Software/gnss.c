@@ -250,233 +250,77 @@ GNSSData* parseNMEAData(const char *data) {
 	uint16_t i = 0;
 
 	uint16_t numOfLines = 0;
-	uint16_t lineCount = 0;
+	uint16_t nArgs = 0;
 
 	char ** lines = splitString(data, outer_delimiter, &numOfLines);
 
 	GNSSData *gnssData = createGNSSData();
-	uint8_t status = -1;
+	uint8_t status = 1;
 
 
 
-	// Temporary variables
-	char *error_ptr;
-	float_t tempFloat;
-	uint32_t temp32;
-	uint8_t temp8;
-	uint16_t length;
-	uint16_t tokenNum;
+	for (i = 0; i < numOfLines; i++)
+	{
+		char * line = lines[i];
+		char ** lineArr;
+		
+		if (verifyFormat(line) == 0)
+		{
+			if (nmeaChecksum(line) == 0)
+			{
+				lineArr = splitString(line, inner_delimiter, &nArgs);
 
+				gnssData->constellation = convertConstellation(lineArr[0]);
 
-	char *line = lines[lineCount];
-	char *lineStart = NULL;
+				if (gnssData->constellation != INVALID)
+				{
+					Sentences sent_type = getSentenceType(lineArr[0]);
+					uint16_t errCode = 0;
+					
 
-	while (line != NULL) {
-		lineStart = strrchr(line, '$');
-		if (lineStart != NULL) { // Realign the last occurence of $ to be start of message
-			line = lineStart;
-		}
-		length = strlen(line); // Length of string
-		tokenNum = numberOfTokens(line, length, ','); // Number of tokens in line
+					switch(sent_type)
+					{
+						case GGA:
+							errCode = captureGGAData(lineArr, nArgs, gnssData);
+							break;
+						case GLL:
+							errCode = captureGLLData(lineArr, nArgs, gnssData);
+							break;
+						case GSA:
+							errCode = captureGSAData(lineArr, nArgs, gnssData);
+							break;
+						case RMC:
+							errCode = captureRMCData(lineArr, nArgs, gnssData);
+							break;
+						case VTG:
+							errCode = captureVTGData(lineArr, nArgs, gnssData);
+							break;
+						default:
+							break;
+					}
 
-		Constellation constellation = verifyData(line, length); // Check headers to make sure they start in NMEA format
-
-		if (constellation != INVALID && tokenNum > 1) { // If data is valid and contains data (more than just the head
-
-			//printf("%s\r\n", line);
-
-			// Tokenise data
-			char *lineArray[tokenNum];
-			i = 0;
-			lineArray[i] = strsep(&line, inner_delimiter);
-			while (lineArray[i] != NULL && i < tokenNum) {
-				i++; // Adds first because there is an extra token at the end?
-				lineArray[i] = strsep(&line, inner_delimiter);
+					if (errCode != 0)
+					{
+						printf("Could not parse the sentence: %s\n", line);
+					}
+					else
+					{
+						status = 0;
+					}
+				}
 			}
-
-			// Assign data
-			gnssData->constellation = constellation;
-			if (strncmp("GSA", lineArray[0] + 3, 3) == 0) {
-				if (lineArray[2][0] != '1') {
-					if (lineArray[1][0] == 'M') {
-						strcpy(gnssData->quality, "Manual");
-					} else if (lineArray[1][0] == 'A') {
-						strcpy(gnssData->quality, "Auto");
-					} else {
-						strcpy(gnssData->quality, "Unknown");
-					}
-					tempFloat = strtof(lineArray[tokenNum - 4], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->PDOP = tempFloat;
-					}
-					tempFloat = strtof(lineArray[tokenNum - 3], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->HDOP = tempFloat;
-					}
-					tempFloat = strtof(lineArray[tokenNum - 2], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->VDOP = tempFloat;
-					}
-					if (lineArray[tokenNum - 1][0] == '1') {
-						strcpy(gnssData->ID, "GPS");
-					} else if (lineArray[tokenNum - 1][0] == '2') {
-						strcpy(gnssData->ID, "GLONASS");
-					} else if (lineArray[tokenNum - 1][0] == '3') {
-						strcpy(gnssData->ID, "GALILEO");
-					} else if (lineArray[tokenNum - 1][0] == '5') {
-						strcpy(gnssData->ID, "BEIDOU");
-					}
-					status = 0;
-				}
-			} else if (strncmp("GSV", lineArray[0] + 3, 3) == 0) {
-				printf("GSV: ");
-				for (i = 0; i < tokenNum - 1; i++) {
-					printf("%s,", lineArray[i]);
-				}
-				printf("%s\r\n", lineArray[i + 1]);
-			} else if (strncmp("VTG", lineArray[0] + 3, 3) == 0) {
-				if (lineArray[2][0] == 'T' && lineArray[4][0] == 'M'
-						&& lineArray[6][0] == 'N' && lineArray[8][0] == 'K'
-						&& lineArray[9][0] != '1') {
-					tempFloat = strtof(lineArray[1], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->angle = tempFloat;
-					}
-					tempFloat = strtof(lineArray[3], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->magnetic = tempFloat;
-					}
-					tempFloat = strtof(lineArray[5], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->speed = tempFloat;
-					}
-					char *quality = getQuality(lineArray[9][0]);
-					if (quality[0] != '\0') {
-						strcpy(gnssData->quality, quality);
-					}
-					status = 0;
-				}
-			} else if (strncmp("GGA", lineArray[0] + 3, 3) == 0) {
-				if (lineArray[10][0] == 'M' && lineArray[12][0] == 'M'
-						&& lineArray[6][0] != '0') {
-					temp32 = strtol(lineArray[1], &error_ptr, 10);
-					if (*error_ptr == '.') {
-						gnssData->GPStime = temp32;
-						status = 0;
-					}
-					convertToDegree(lineArray[2], lineArray[3][0],
-							&(gnssData->latitude));
-					convertToDegree(lineArray[4], lineArray[5][0],
-							&(gnssData->longitude));
-					char *quality = getQuality(lineArray[6][0]);
-					if (quality[0] != '\0') {
-						strcpy(gnssData->quality, quality);
-					}
-					temp8 = strtol(lineArray[7], &error_ptr, 10);
-					if (*error_ptr == '\0') {
-						gnssData->satellites = temp8;
-					}
-					tempFloat = strtof(lineArray[8], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->HDOP = tempFloat;
-					}
-					tempFloat = strtof(lineArray[9], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->altitude = tempFloat;
-					}
-					tempFloat = strtof(lineArray[11], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->geoidSep = tempFloat;
-					}
-					temp8 = strtol(lineArray[13], &error_ptr, 10);
-					if (*error_ptr == '\0') {
-						gnssData->diffTime = temp8;
-					}
-					tempFloat = strtol(lineArray[14], &error_ptr, 10);
-					if (*error_ptr == '*') {
-						gnssData->diffID = temp8;
-					}
-					status = 0;
-				}
-			} else if (strncmp("RMC", lineArray[0] + 3, 3) == 0) {
-				if (lineArray[2][0] == 'A' && lineArray[12][0] != 'N') {
-					temp32 = strtol(lineArray[1], &error_ptr, 10);
-					if (*error_ptr == '.') {
-						gnssData->GPStime = temp32;
-						status = 0;
-					}
-					convertToDegree(lineArray[3], lineArray[4][0],
-							&(gnssData->latitude));
-					convertToDegree(lineArray[5], lineArray[6][0],
-							&(gnssData->longitude));
-					tempFloat = strtof(lineArray[7], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->speed = tempFloat;
-					}
-					tempFloat = strtof(lineArray[8], &error_ptr);
-					if (*error_ptr == '\0') {
-						gnssData->angle = tempFloat;
-					}
-					temp32 = strtol(lineArray[9], &error_ptr, 10);
-					if (*error_ptr == '\0') {
-						gnssData->date = temp32;
-					}
-					tempFloat = strtof(lineArray[10], &error_ptr);
-					if (*error_ptr == '\0') {
-						if (lineArray[11][0] == 'W') {
-							tempFloat *= -1;
-						}
-						gnssData->magnetic = tempFloat;
-					}
-					char *quality = getQuality(lineArray[12][0]);
-					if (quality[0] != '\0') {
-						strcpy(gnssData->quality, quality);
-					}
-					status = 0;
-				} else if (lineArray[1][0] != '\0') { //If time still available
-					temp32 = strtol(lineArray[1], &error_ptr, 10);
-					if (*error_ptr == '.') {
-						gnssData->GPStime = temp32;
-						status = 0;
-					}
-				}
-			} else if (strncmp("GLL", lineArray[0] + 3, 3) == 0) {
-				if (lineArray[6][0] == 'A') {
-					convertToDegree(lineArray[1], lineArray[2][0],
-							&(gnssData->latitude));
-					convertToDegree(lineArray[3], lineArray[4][0],
-							&(gnssData->longitude));
-					temp32 = strtol(lineArray[5], &error_ptr, 10);
-					if (*error_ptr == '.') {
-						gnssData->GPStime = temp32;
-					}
-					status = 0;
-				} else if (lineArray[5][0] != '\0') { //If time still available
-					temp32 = strtol(lineArray[5], &error_ptr, 10);
-					if (*error_ptr == '.') {
-						gnssData->GPStime = temp32;
-						status = 0;
-					}
-				}
-			} else {
-				// Reformat into original and print
-				printf("Cannot parse line: ");
-				for (i = 0; i < tokenNum - 1; i++) {
-					printf("%s,", lineArray[i]);
-				}
-				printf("%s\r\n", lineArray[i + 1]);
+			else
+			{
+				printf("Failed checksum for data: %s\n", line);
 			}
-
 		}
-		HAL_Delay(100);
-		lineCount++;
-		if (lineCount < numOfLines) {
-			line = lines[lineCount];
-			//printf("Next line: %s\r\n", line);
-		} else {
-			line = NULL;
-			//printf("END OF DATA\r\n");
+		else
+		{
+			printf("Invalid data format for data: %s\n", line);
 		}
+		
+		if (*lineArr != NULL) free(*lineArr);
+		if (lineArr != NULL) free(lineArr);
 	}
 
 	if (status) {
