@@ -66,7 +66,7 @@ uint16_t captureGGAData(char ** lineArr, uint16_t length, GNSSData * gnssData);
 uint8_t captureRMCData(char ** lineArr, uint16_t length, GNSSData * gnssData);
 uint8_t captureGLLData(char ** lineArr, uint16_t length, GNSSData * gnssData);
 // Does NMEA checksum to make sure data is correctly received
-uint8_t nmeaChecksum(const char *data, const uint16_t length);
+int8_t nmeaChecksum(const char *data);
 int8_t verifyFormat(const char *data);
 // Verifies data separated by NMEA messages and removes invalid or incorrect data
 Constellation verifyData(const char* data, const uint16_t length);
