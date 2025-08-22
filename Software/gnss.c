@@ -24,17 +24,6 @@ GNSSData* createGNSSData() {
 	return data;
 }
 
-uint16_t numberOfTokens(const char *data, const uint16_t length, const char token) {
-	uint16_t i;
-	uint16_t t = 0;
-	for (i = 0; i < length; i++) {
-		if (data[i] == token) {
-			t++;
-		}
-	}
-	return t + 1;
-}
-
 /**
  * Similar to `strsep` - updates the input string to point past the
  * delimiter string and sets the delimiter part to \0. Uses the entire
@@ -857,36 +846,4 @@ Constellation convertConstellation(const char *header)
 	}
 
 	return INVALID;
-}
-
-Constellation verifyValidData(const char *data) {
-	Constellation constellation = INVALID;
-	/*char* head[4] = { 0 };
-	 strncpy(head, data + 3, 3);
-	 printf("%s\r\n", head);
-	 if (strncmp("GSA", head, 3) == 0) {
-	 printf("GNGSA!!!!\r\n");
-	 } else if (strncmp("GSV", head, 3) == 0) {
-	 correct = 1;
-	 } else if (strncmp("VTG", head, 3) == 0) {
-	 printf("GNVTG!!!!\r\n");
-	 } else if (strncmp("GGA", head, 3) == 0) {
-	 printf("GNGGA!!!!\r\n");
-	 } else if (strncmp("RMC", head, 3) == 0) {
-	 printf("GNRMC!!!!\r\n");
-	 } else if (strncmp("GLL", head, 3) == 0) {
-	 printf("GNGGL!!!!\r\n");
-	 }*/
-	if (strncmp("$GP", data, 3) == 0) {
-		constellation = GPS;
-	} else if (strncmp("$GL", data, 3) == 0) {
-		constellation = GLONASS;
-	} else if (strncmp("$GA", data, 3) == 0) {
-		constellation = GALILEO;
-	} else if (strncmp("$GB", data, 3) == 0 || strncmp("$BD", data, 3) == 0) {
-		constellation = BEIDOU;
-	} else if (strncmp("$GN", data, 3) == 0) {
-		constellation = NONE;
-	}
-	return constellation;
 }
