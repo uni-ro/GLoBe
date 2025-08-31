@@ -45,6 +45,12 @@ uint16_t numTokens(const char *string, const char * token)
 	uint16_t i = 0;
 	uint8_t tokenLength = strlen(token);
 
+	/* If the string is not longer than the token, return */
+	if (strlen(string) < tokenLength)
+	{
+		return 0;
+	}
+
 	char * substr = (char *) calloc(tokenLength + 1, sizeof(char));
 
 	/* Scan the string for instances of the token, ending with the final token size */
@@ -102,6 +108,13 @@ char ** splitString(const char * string, const char * delim, uint16_t * arr_size
 	/* Create copy of input string for strsep to use */
 	char * input = (char *) calloc(strlen(string) + 1, sizeof(char));
 	input = strcpy(input, string);
+
+	/* If the string length is not greater than the deliminator length, return NULL */
+	if (strlen(string) <= strlen(delim))
+	{
+		free(input);
+		return NULL;
+	}
 
 	/* If the string ends with the delimiter, create only n sections
 	 * For example, Foo\r with delimiter as '\r' returns an array of size 2.
