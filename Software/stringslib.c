@@ -109,7 +109,7 @@ char ** splitString(const char * string, const char * delim, uint16_t * arr_size
 	char * input = (char *) calloc(strlen(string) + 1, sizeof(char));
 	input = strcpy(input, string);
 
-	/* If the string length is not greater than the deliminator length, return NULL */
+	/* If the string length is not greater than the delimiter length, return NULL */
 	if (strlen(string) <= strlen(delim))
 	{
 		free(input);
