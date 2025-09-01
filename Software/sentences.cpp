@@ -187,11 +187,11 @@ void DTM::parseNMEA(char ** lineArr, uint16_t length)
 
     this->datum = std::string(lineArr[0]);
     this->subDatum = std::string(lineArr[1]);
-    this->lat = strtof(lineArr[2], NULL);
+    this->lat = degMin2DecDeg(std::stof(lineArr[2], NULL));
     this->NS = *lineArr[3];
-    this->lon = strtof(lineArr[4], NULL);
+    this->lon = degMin2DecDeg(std::stof(lineArr[4], NULL));
     this->EW = *lineArr[5];
-    this->alt = strtof(lineArr[6], NULL);
+    this->alt = std::stof(lineArr[6], NULL);
     this->refDatum = std::string(lineArr[7]);
 }
 
@@ -225,9 +225,9 @@ void GLL::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
 
-    this->lat = strtof(lineArr[1], NULL);
+    this->lat = degMin2DecDeg(std::stof(lineArr[1], NULL));
     this->NS = *lineArr[2];
-    this->lon = strtof(lineArr[3], NULL);
+    this->lon = degMin2DecDeg(std::stof(lineArr[3], NULL));
     this->EW = *lineArr[4];
     this->time = std::string(lineArr[5]);
     this->status = *lineArr[6];
