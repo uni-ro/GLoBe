@@ -602,28 +602,7 @@ uint8_t captureGLLData(char ** lineArr, uint16_t length, GNSSData * gnssData)
 	
 
 	return errCode;
-}
-
-int8_t nmeaChecksum(const char *data) {
-	uint16_t i = 1;
-	uint8_t check = 0;
-	char * checksumPos = strchr(data, '*');
-	if (checksumPos != NULL)
-	{
-		while(data[i] != '*')
-		{
-			check ^= (uint8_t) data[i];
-			i++;
-		}
-
-		if (check == (uint8_t) strtol(checksumPos + 1, NULL, 16))
-		{
-			return 0;
-		}
-	}
-
-	return -1;
-}
+}	
 
 /**
  * Verifies the format of the given NMEA message.
