@@ -132,9 +132,9 @@ POS * const POS::getPosition()
  */
 float_t POS::degMin2DecDeg(float_t coords)
 {
-    float_t degrees;
-    int8_t deg;
-    float_t min;
+    float_t degrees = 0;
+    int8_t deg = 0;
+    float_t min = 0;
 
     deg = (int16_t) coords / 100;
     min = abs(coords) - abs(deg * 100);
