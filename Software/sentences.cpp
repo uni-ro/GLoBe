@@ -119,6 +119,32 @@ POS * const POS::getPosition()
     return (POS *) this;
 }
 
+/**
+ * Returns the given longitude/latitude value in decimal degrees.
+ * 
+ * @param coords The longitude/latitude value in degrees, minutes and decimal minutes.
+ *               This must be of the format: (d)ddmm.mmmmm
+ *               -> Where (d) is an optional term and can either be 0 or 1
+ * 
+ * @returns The given value converted to decimal degrees format.
+ * 
+ * @note This assumes that the input is between 180 and -180 degrees inclusive.
+ */
+float_t POS::degMin2DecDeg(float_t coords)
+{
+    float_t degrees;
+    int8_t deg;
+    float_t min;
+
+    deg = (int16_t) coords / 100;
+    min = abs(coords) - abs(deg * 100);
+
+    degrees += deg;
+    degrees += min / 60.0;
+
+    return degrees;
+}
+
 /* ------------------------- END POS Definitions ------------------------ */
 
 

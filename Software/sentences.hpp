@@ -94,6 +94,8 @@ class POS
     const float_t getLongitude();
     POS * const getPosition();
 
+    static float_t degMin2DecDeg(float_t coords);
+
     protected:
     float_t lat = 0;
     char NS = '\0';
