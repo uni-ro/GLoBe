@@ -983,3 +983,56 @@ void RMC::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END RMC Definitions ------------------------ */
+
+
+/* -------------------------- TXT Definitions --------------------------- */
+
+TXT::TXT(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool TXT::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    return valid;
+}
+
+void TXT::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+
+    this->numMsg = std::stoi(lineArr[1]);
+    this->msgNum = std::stoi(lineArr[2]);
+    this->msgType = std::stoi(lineArr[3]);
+    this->text = std::string(lineArr[4]);
+}
+
+uint8_t TXT::getNumMessages()
+{
+    return this->numMsg;
+}
+
+uint8_t TXT::getMessageNum()
+{
+    return this->msgNum;
+}
+
+uint8_t TXT::getMessageType()
+{
+    return this->msgType;
+}
+
+std::string TXT::getText()
+{
+    return this->text;
+}
+
+void TXT::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 7;
+    *maxLength = 7;
+}
+
+/* ------------------------- END TXT Definitions ------------------------ */

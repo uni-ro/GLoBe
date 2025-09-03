@@ -512,6 +512,11 @@ class TXT : public BASE
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    TXT(char ** lineArr, uint16_t length);
+    uint8_t getNumMessages();
+    uint8_t getMessageNum();
+    uint8_t getMessageType();
+    std::string getText();
 
     private:
     uint8_t numMsg;
@@ -519,7 +524,10 @@ class TXT : public BASE
     uint8_t msgType;
     std::string text;
 
-    static const uint8_t nFields = 7;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
