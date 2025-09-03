@@ -462,3 +462,86 @@ void GLL::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END GLL Definitions ------------------------ */
+
+
+/* -------------------------- GNS Definitions --------------------------- */
+
+GNS::GNS(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool GNS::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+    valid = valid && POS::checkValidity();
+    
+    if (this->navStatus != 'V') /* Fixed field as hardware is not providing nav status info */
+        valid = false;
+
+    return valid;
+}
+
+void GNS::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+    POS::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5]);
+
+    this->time = std::string(lineArr[1]);
+    this->posMode = std::string(lineArr[6]);
+    this->numSV = std::stoi(lineArr[7]);
+    this->HDOP = std::stof(lineArr[8]);
+    this->alt = std::stof(lineArr[9]);
+    this->sep = std::stof(lineArr[10]);
+    this->diffAge = std::stoi(lineArr[11]);
+    this->diffStation = std::stoi(lineArr[12]);
+    this->navStatus = *lineArr[13];
+}
+
+std::string GNS::getPosMode()
+{
+    return this->posMode;
+}
+
+uint8_t GNS::getNumSV()
+{
+    return this->numSV;
+}
+
+float_t GNS::getHDOP()
+{
+    return this->HDOP;
+}
+
+float_t GNS::getAltitude()
+{
+    return this->alt;
+}
+
+float_t GNS::getGEOIDSep()
+{
+    return this->sep;
+}
+
+uint16_t GNS::getDiffAge()
+{
+    return this->diffAge;
+}
+
+uint16_t GNS::getDiffStationID()
+{
+    return this->diffStation;
+}
+
+char GNS::getNavStatus()
+{
+    return this->navStatus;
+}
+
+void GNS::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 16;
+    *maxLength = 16;
+}
+
+/* ------------------------- END GNS Definitions ------------------------ */

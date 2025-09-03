@@ -293,6 +293,15 @@ class GNS : public BASE, public POS, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    GNS(char ** lineArr, uint16_t length);
+    std::string getPosMode();
+    uint8_t getNumSV();
+    float_t getHDOP();
+    float_t getAltitude();
+    float_t getGEOIDSep();
+    uint16_t getDiffAge();
+    uint16_t getDiffStationID();
+    char getNavStatus();
 
     private:
     std::string posMode;
@@ -304,7 +313,10 @@ class GNS : public BASE, public POS, public TIME
     uint16_t diffStation;
     char navStatus;
 
-    static const uint8_t nFields = 16;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
