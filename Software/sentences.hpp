@@ -249,8 +249,6 @@ class GLL : public BASE, public POS, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     GLL(char ** lineArr, uint16_t length);
-    bool checkValidity() override;
-    void parseNMEA(char ** lineArr, uint16_t length) override;
     const char getStatus();
     const char getPosMode();
 
@@ -258,7 +256,10 @@ class GLL : public BASE, public POS, public TIME
     char status = '\0';
     char posMode = '\0';
 
-    static const uint8_t nFields = 10;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**

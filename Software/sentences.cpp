@@ -427,14 +427,9 @@ GLL::GLL(char ** lineArr, uint16_t length) : BASE(lineArr, length)
 bool GLL::checkValidity()
 {
     bool valid = BASE::checkValidity();
+    valid = valid && POS::checkValidity();
 
     if (this->status != 'A')
-        valid = false;
-
-    if (this->NS != 'N' && this->NS != 'S')
-        valid = false;
-    
-    if (this->EW != 'E' && this->EW !='W')
         valid = false;
     
     return valid;
@@ -443,11 +438,8 @@ bool GLL::checkValidity()
 void GLL::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
+    POS::parseNMEA(lineArr[1], lineArr[2], lineArr[3], lineArr[4]);
 
-    this->lat = degMin2DecDeg(std::stof(lineArr[1], NULL));
-    this->NS = *lineArr[2];
-    this->lon = degMin2DecDeg(std::stof(lineArr[3], NULL));
-    this->EW = *lineArr[4];
     this->time = std::string(lineArr[5]);
     this->status = *lineArr[6];
     this->posMode = *lineArr[7];
@@ -461,6 +453,12 @@ const char GLL::getStatus()
 const char GLL::getPosMode()
 {
     return this->posMode;
+}
+
+void GLL::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 10;
+    *maxLength = 10;
 }
 
 /* ------------------------- END GLL Definitions ------------------------ */
