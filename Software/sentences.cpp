@@ -545,3 +545,64 @@ void GNS::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END GNS Definitions ------------------------ */
+
+
+/* -------------------------- GRS Definitions --------------------------- */
+
+GRS::GRS(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool GRS::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    return valid;
+}
+
+void GRS::parseNMEA(char ** lineArr, uint16_t length)
+{
+    uint8_t i;
+
+    BASE::parseNMEA(lineArr, length);
+
+    this->time = std::string(lineArr[1]);
+    this->mode = std::stoi(lineArr[2]);
+    
+    for (i = 0; i < 12; i++)
+    {
+        this->residual[i] = std::stof(lineArr[3 + i]);
+    }
+
+    this->systemId = std::stoi(lineArr[15]);
+    this->singalId = std::stoi(lineArr[16]);
+}
+
+uint8_t GRS::getComputationMethod()
+{
+    return this->mode;
+}
+
+const float_t * const GRS::getResiduals()
+{
+    return this->residual;
+}
+
+uint8_t GRS::getSystemId()
+{
+    return this->systemId;
+}
+
+uint8_t GRS::getSingalId()
+{
+    return this->singalId;
+}
+
+void GRS::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 19;
+    *maxLength = 19;
+}
+
+/* ------------------------- END GRS Definitions ------------------------ */

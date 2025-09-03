@@ -338,6 +338,11 @@ class GRS : public BASE, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    GRS(char ** lineArr, uint16_t length);
+    uint8_t getComputationMethod();
+    const float_t * const getResiduals();
+    uint8_t getSystemId();
+    uint8_t getSingalId();
     
     private:
     uint8_t mode;
@@ -345,7 +350,10 @@ class GRS : public BASE, public TIME
     uint8_t systemId;
     uint8_t singalId;
 
-    static const uint8_t nFields = 19;
+    protected:
+    bool checkValidity();
+    void parseNMEA(char ** lineArr, uint16_t length);
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
