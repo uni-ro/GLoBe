@@ -351,8 +351,8 @@ class GRS : public BASE, public TIME
     uint8_t singalId;
 
     protected:
-    bool checkValidity();
-    void parseNMEA(char ** lineArr, uint16_t length);
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
     void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
@@ -382,8 +382,8 @@ class GSA : public BASE
     uint8_t systemId;
 
     protected:
-    bool checkValidity();
-    void parseNMEA(char ** lineArr, uint16_t length);
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
     void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
