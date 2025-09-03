@@ -56,6 +56,7 @@ class BASE
     BASE(char ** lineArr, uint16_t length);
     virtual void initialise(char ** lineArr, uint16_t length);
     bool getIsValid();
+    Constellation getConstellation();
 
     protected:
     bool isValid = false;

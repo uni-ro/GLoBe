@@ -92,6 +92,11 @@ bool BASE::getIsValid()
     return this->isValid;
 }
 
+Constellation BASE::getConstellation()
+{
+    return this->constellation;
+}
+
 BASE::~BASE()
 {
 
