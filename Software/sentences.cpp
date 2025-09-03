@@ -1036,3 +1036,92 @@ void TXT::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END TXT Definitions ------------------------ */
+
+
+/* -------------------------- VLW Definitions --------------------------- */
+
+VLW::VLW(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool VLW::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    if (this->twdUnit != 'N')
+        valid = false;
+
+    if (this->wdUnit != 'N')
+        valid = false;
+
+    if (this->tgdUnit != 'N')
+        valid = false;
+
+    if (this->gdUnit != 'N')
+        valid = false;
+
+    return valid;
+}
+
+void VLW::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+
+    this->twd = 255; /* Fixed field: null */
+    this->twdUnit = *lineArr[2]; /* Fixed field: N */
+    this->wd = 255; /* Fixed field: null */
+    this->wdUnit = *lineArr[4]; /* Fixed field: N */
+    this->tgd = std::stof(lineArr[5]);
+    this->tgdUnit = *lineArr[6]; /* Fixed field: N */
+    this->gd = std::stof(lineArr[7]);
+    this->gdUnit = *lineArr[8]; /* Fixed field: N */
+}
+
+uint8_t VLW::getTotalWaterDist()
+{
+    return this->twd;
+}
+
+char VLW::getTWDUnit()
+{
+    return this->twdUnit;
+}
+
+uint8_t VLW::getWaterDist()
+{
+    return this->wd;
+}
+
+char VLW::getWDUnit()
+{
+    return this->wdUnit;
+}
+
+float_t VLW::getTotalGroundDist()
+{
+    return this->tgd;
+}
+
+char VLW::getTGDUnit()
+{
+    return this->tgdUnit;
+}
+
+float_t VLW::getGroundDist()
+{
+    return this->gd;
+}
+
+char VLW::getGDUnit()
+{
+    return this->gdUnit;
+}
+
+void VLW::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 11;
+    *maxLength = 11;
+}
+
+/* ------------------------- END VLW Definitions ------------------------ */

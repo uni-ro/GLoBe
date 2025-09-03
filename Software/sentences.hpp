@@ -537,6 +537,15 @@ class VLW : public BASE
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    VLW(char ** lineArr, uint16_t length);
+    uint8_t getTotalWaterDist(); /* Fixed field: null */
+    char getTWDUnit();
+    uint8_t getWaterDist(); /* Fixed field: null */
+    char getWDUnit();
+    float_t getTotalGroundDist();
+    char getTGDUnit();
+    float_t getGroundDist();
+    char getGDUnit();
 
     private:
     uint8_t twd; /* Fixed field: null */
@@ -548,7 +557,10 @@ class VLW : public BASE
     float_t gd;
     char gdUnit;
 
-    static const uint8_t nFields = 11;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
