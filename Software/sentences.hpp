@@ -394,6 +394,14 @@ class GST : public BASE, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    GST(char ** lineArr, uint16_t length);
+    float_t getRangeRMS();
+    float_t getStdMajor();
+    float_t getStdMinor();
+    float_t getOrientation();
+    float_t getStdLatitude();
+    float_t getStdLongitude();
+    float_t getStdAltitude();
 
     private:
     float_t rangeRms;
@@ -404,7 +412,10 @@ class GST : public BASE, public TIME
     float_t stdLong;
     float_t stdAlt;
 
-    static const uint8_t nFields = 11;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**

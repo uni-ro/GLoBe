@@ -687,3 +687,75 @@ void GSA::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END GSA Definitions ------------------------ */
+
+
+/* -------------------------- GST Definitions --------------------------- */
+
+GST::GST(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool GST::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    return valid;
+}
+
+void GST::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+
+    this->time = std::string(lineArr[1]);
+    this->rangeRms = std::stof(lineArr[2]);
+    this->stdMajor = std::stof(lineArr[3]);
+    this->stdMinor = std::stof(lineArr[4]);
+    this->orient = std::stof(lineArr[5]);
+    this->stdLat = std::stof(lineArr[6]);
+    this->stdLong = std::stof(lineArr[7]);
+    this->stdAlt = std::stof(lineArr[8]);
+}
+
+float_t GST::getRangeRMS()
+{
+    return this->rangeRms;
+}
+
+float_t GST::getStdMajor()
+{
+    return this->stdMajor;
+}
+
+float_t GST::getStdMinor()
+{
+    return this->stdMinor;
+}
+
+float_t GST::getOrientation()
+{
+    return this->orient;
+}
+
+float_t GST::getStdLatitude()
+{
+    return this->stdLat;
+}
+
+float_t GST::getStdLongitude()
+{
+    return this->stdLong;
+}
+
+float_t GST::getStdAltitude()
+{
+    return this->stdAlt;
+}
+
+void GST::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 11;
+    *maxLength = 11;
+}
+
+/* ------------------------- END GST Definitions ------------------------ */
