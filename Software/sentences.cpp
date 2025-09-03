@@ -107,6 +107,27 @@ BASE::~BASE()
 
 /* -------------------------- POS Definitions --------------------------- */
 
+bool POS::checkValidity()
+{
+    bool valid = true;
+
+    if (this->NS != 'N' && this->NS != 'S')
+            valid = false;
+        
+    if (this->EW != 'E' && this->EW !='W')
+        valid = false;
+        
+    return valid;
+}
+
+void POS::parseNMEA(char * lat, char * NS, char * lon, char * EW)
+{
+    this->lat = degMin2DecDeg(std::stof(lat));
+    this->NS = *NS;
+    this->lon = degMin2DecDeg(std::stof(lon));
+    this->EW = *EW;
+}
+
 /* Returns the latitude (positive if north, negative if south) */
 const float_t POS::getLatitude()
 {

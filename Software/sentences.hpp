@@ -102,6 +102,9 @@ class POS
     char NS = '\0';
     float_t lon = 0;
     char EW = '\0';
+    
+    bool checkValidity();
+    void parseNMEA(char * lat, char * NS, char * lon, char * EW);
 };
 
 /**
