@@ -1222,4 +1222,4 @@ void VTG::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
     *maxLength = 12;
 }
 
-/* ------------------------- END VTG Definitions ------------------------ */VTG
+/* ------------------------- END VTG Definitions ------------------------ */
