@@ -30,23 +30,15 @@ Sentence<T>::Sentence(char * line)
             lineArr = splitString(line, delim, &length);
             if(isAcceptedSubtype<T>(lineArr[0]))
             {
-                try
+                bool initialised;
+
+                this->sentence = new T(lineArr, length);
+                initialised = this->sentence->initialise(lineArr, length);
+
+                /* If the sentence was not properly initialised, set it to NULL */
+                if (!initialised)
                 {
-                    this->sentence = new T(lineArr, length);
-                    this->sentence->initialise(lineArr, length);
-    
-                    /* If the sentence has invalid data, set it to NULL */
-                    if (!this->sentence->getIsValid())
-                    {
-                        delete this->sentence;
-                        this->sentence = NULL;
-                    }
-                }
-                catch (std::invalid_argument const& err)
-                {
-                    if (this->sentence != NULL)
-                        delete this->sentence;
-                    
+                    delete this->sentence;
                     this->sentence = NULL;
                 }
             }

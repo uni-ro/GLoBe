@@ -54,16 +54,14 @@ class BASE
     public:
     static const std::vector<std::string> acceptedTypes;
     BASE(char ** lineArr, uint16_t length);
-    virtual void initialise(char ** lineArr, uint16_t length);
-    bool getIsValid();
+    virtual bool initialise(char ** lineArr, uint16_t length);
     Constellation getConstellation();
 
     protected:
-    bool isValid = false;
     std::string header;
     Constellation constellation = INVALID;
     uint8_t checksum = 0;
-    void verifyBounds(uint16_t nFields);
+    bool verifyBounds(uint16_t nFields);
     virtual bool checkValidity();
     virtual void parseNMEA(char ** lineArr, uint16_t length);
     virtual void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength);

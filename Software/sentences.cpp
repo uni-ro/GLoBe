@@ -41,21 +41,25 @@ BASE::BASE(char ** lineArr, uint16_t length)
 
 }
 
-void BASE::initialise(char ** lineArr, uint16_t length)
+bool BASE::initialise(char ** lineArr, uint16_t length)
 {
-    this->parseNMEA(lineArr, length);
-
     /* 
      * Number of fields is length + 2 as the checksum and end delimiter are considered 
      * as fields, but are not considered in the length of the array 
      */
-    this->verifyBounds(length + 2);
-    
-    this->isValid = this->checkValidity();
+    if(this->verifyBounds(length + 2))  // This ensures parseNMEA does not overstep array bounds
+    {
+        this->parseNMEA(lineArr, length);
+        return this->checkValidity();
+    }
+    else
+    {
+        return false;
+    }
 }
 
 /* Ensure that the provided sentence within the required size. */
-void BASE::verifyBounds(uint16_t nFields)
+bool BASE::verifyBounds(uint16_t nFields)
 {
     std::invalid_argument err("The given sentence length is not within the acceptable bounds.");
     uint8_t minLength, maxLength;
@@ -63,7 +67,9 @@ void BASE::verifyBounds(uint16_t nFields)
 
     /* If outside the sentence bounds, it is no longer correct */
     if (nFields < minLength || nFields > maxLength)
-        throw err;
+        return false;
+
+    return true;
 }
 
 /**
@@ -87,11 +93,6 @@ void BASE::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 {
     *minLength = 2;
     *maxLength = 23;
-}
-
-bool BASE::getIsValid()
-{
-    return this->isValid;
 }
 
 Constellation BASE::getConstellation()
