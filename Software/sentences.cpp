@@ -44,24 +44,20 @@ BASE::BASE(char ** lineArr, uint16_t length)
 void BASE::initialise(char ** lineArr, uint16_t length)
 {
     this->parseNMEA(lineArr, length);
+    this->verifyBounds(length);
     this->isValid = this->checkValidity();
 }
 
-/* Ensure that the provided sentence is of the required type. */
-bool BASE::verifyType(char ** lineArr, uint16_t length)
+/* Ensure that the provided sentence within the required size. */
+void BASE::verifyBounds(uint16_t length)
 {
+    std::invalid_argument err("The given sentence length is not within the acceptable bounds.");
     uint8_t minLength, maxLength;
     this->getSentenceBounds(&minLength, &maxLength);
 
     /* If outside the sentence bounds, it is no longer correct */
     if (length < minLength || length > maxLength)
-        return false;
-
-    /* If the header is not the same as the current type, return false */
-    if (lineArr[0])
-        return false;
-
-    return true;
+        throw err;
 }
 
 /**

@@ -63,7 +63,7 @@ class BASE
     std::string header;
     Constellation constellation = INVALID;
     uint8_t checksum = 0;
-    virtual bool verifyType(char ** lineArr, uint16_t length);
+    void verifyBounds(uint16_t length);
     virtual bool checkValidity();
     virtual void parseNMEA(char ** lineArr, uint16_t length);
     virtual void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength);
