@@ -456,13 +456,20 @@ class RLM : public BASE, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    RLM(char ** lineArr, uint16_t length);
+    uint64_t getBeacon();
+    char getCode();
+    uint64_t getBody();
 
     private:
     uint64_t beacon;
     char code;
     uint64_t body; /* Check that the value cannot exceed 64bit */
 
-    static const uint8_t nFields = 7;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**

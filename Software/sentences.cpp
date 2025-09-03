@@ -846,3 +846,51 @@ GSV::~GSV()
 }
 
 /* ------------------------- END GSV Definitions ------------------------ */
+
+
+/* -------------------------- RLM Definitions --------------------------- */
+
+RLM::RLM(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool RLM::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    return valid;
+}
+
+void RLM::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+
+    this->beacon = std::stoi(lineArr[1], NULL, 16);
+    this->time = std::string(lineArr[2]);
+    this->code = *lineArr[3];
+    this->body = std::stoi(lineArr[4], NULL, 16);
+}
+
+uint64_t RLM::getBeacon()
+{
+    return this->beacon;
+}
+
+char RLM::getCode()
+{
+    return this->code;
+}
+
+uint64_t RLM::getBody()
+{
+    return this->body;
+}
+
+void RLM::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 7;
+    *maxLength = 7;
+}
+
+/* ------------------------- END RLM Definitions ------------------------ */
