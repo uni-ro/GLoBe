@@ -154,8 +154,8 @@ class GAQ : public BASE, public STD_MSG_POLL
     public:
     static const std::vector<std::string> acceptedTypes;
     
-    private:
-    static const uint8_t nFields = 4;
+    protected:
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
@@ -166,8 +166,8 @@ class GBQ : public BASE, public STD_MSG_POLL
     public:
     static const std::vector<std::string> acceptedTypes;
     
-    private:
-    static const uint8_t nFields = 4;
+    protected:
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
@@ -270,8 +270,8 @@ class GLQ : public BASE, public STD_MSG_POLL
     public:
     static const std::vector<std::string> acceptedTypes;
     
-    private:
-    static const uint8_t nFields = 4;
+    protected:
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
@@ -282,8 +282,8 @@ class GNQ : public BASE, public STD_MSG_POLL
     public:
     static const std::vector<std::string> acceptedTypes;
     
-    private:
-    static const uint8_t nFields = 4;
+    protected:
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
@@ -327,8 +327,8 @@ class GPQ : public BASE, public STD_MSG_POLL
     public:
     static const std::vector<std::string> acceptedTypes;
     
-    private:
-    static const uint8_t nFields = 4;
+    protected:
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
