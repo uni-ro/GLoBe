@@ -759,3 +759,90 @@ void GST::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END GST Definitions ------------------------ */
+
+
+/* -------------------------- GSV Definitions --------------------------- */
+
+GSV::GSV(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool GSV::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    return valid;
+}
+
+void GSV::parseNMEA(char ** lineArr, uint16_t length)
+{
+    uint8_t i, nGroups;
+
+    BASE::parseNMEA(lineArr, length);
+
+    this->numMsg = std::stoi(lineArr[1]);
+    this->msgNum = std::stoi(lineArr[2]);
+    this->numSV = std::stoi(lineArr[3]);
+
+    /* Number of repeated groups = (total length - fixed length) / fields in group */
+    nGroups = (length - 6) / 4;
+
+    this->satellites = new SatData[nGroups];
+    this->satellitesLength = nGroups;
+
+    for (i = 0; i < nGroups; i++)
+    {
+        this->satellites[i].svid = std::stoi(lineArr[4 + 4*i]);
+        this->satellites[i].elv = std::stoi(lineArr[5 + 4*i]);
+        this->satellites[i].az = std::stoi(lineArr[6 + 4*i]);
+        this->satellites[i].cno = std::stoi(lineArr[7 + 4*i]);
+    }
+
+    this->signalId = std::stoi(lineArr[4 + 4*nGroups]);
+}
+
+uint8_t GSV::getNumMessages()
+{
+    return this->numMsg;
+}
+
+uint8_t GSV::getMessageNum()
+{
+    return this->msgNum;
+}
+
+uint8_t GSV::getNumSatellites()
+{
+    return this->numSV;
+}
+
+const SatData * const GSV::getSatellites(uint8_t * const arrLength)
+{
+    if (arrLength != NULL)
+    {
+        *arrLength = this->satellitesLength;
+    }
+    
+    return this->satellites;
+}
+
+uint8_t GSV::getSignalId()
+{
+    return this->signalId;
+}
+
+void GSV::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 11;
+    *maxLength = 23;
+}
+
+GSV::~GSV()
+{
+    BASE::~BASE();
+
+    delete this->satellites;
+}
+
+/* ------------------------- END GSV Definitions ------------------------ */

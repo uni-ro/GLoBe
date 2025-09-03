@@ -425,16 +425,28 @@ class GSV : public BASE
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    GSV(char ** lineArr, uint16_t length);
+    uint8_t getNumMessages();
+    uint8_t getMessageNum();
+    uint8_t getNumSatellites();
+    const SatData * const getSatellites(uint8_t * const arrLength);
+    uint8_t getSignalId();
 
     private:
     uint8_t numMsg;
     uint8_t msgNum;
     uint8_t numSV;
-    SatData satellites[4]; /* Note: can appear up to 4 times, not always 4. */
+    SatData * satellites = NULL; /* Note: can appear up to 4 times, not always 4. */
+    uint8_t satellitesLength;
     uint8_t signalId;
 
-    static const uint8_t nFields_min = 7 + 1*4;
-    static const uint8_t nFields_max = 7 + 4*4;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override; 
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
+
+    public:
+    ~GSV() override;
 };
 
 /**
