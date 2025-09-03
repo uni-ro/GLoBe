@@ -570,6 +570,16 @@ class VTG : public BASE
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    VTG(char ** lineArr, uint16_t length);
+    float_t getTrueCourseOverGround();
+    char getTCOGUnit();
+    float_t getMagneticCourseOverGround();
+    char getMCOGUnit();
+    float_t getSpeedOverGroundKnots();
+    char getSOGNUnit();
+    float_t getSpeedOverGroundKms();
+    char getSOGKUnit();
+    char getPosMode();
 
     private:
     float_t cogt;
@@ -577,10 +587,15 @@ class VTG : public BASE
     float_t cogm;
     char cogmUnit; /* Fixed field: M */
     float_t sogn;
+    char sognUnit;
+    float_t sogk;
     char sogkUnit; /* Fixed field: N */
     char posMode;
 
-    static const uint8_t nFields = 12;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**

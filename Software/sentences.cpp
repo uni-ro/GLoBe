@@ -1125,3 +1125,101 @@ void VLW::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END VLW Definitions ------------------------ */
+
+
+/* -------------------------- VTG Definitions --------------------------- */
+
+VTG::VTG(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool VTG::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    if (this->posMode == 'N')
+        valid = false;
+
+    if (this->cogtUnit != 'T')
+        valid = false;
+
+    if (this->cogmUnit != 'M')
+        valid = false;
+
+    if (this->sognUnit != 'N')
+        valid = false;
+
+    if (this->sogkUnit != 'K')
+        valid = false;
+
+    return valid;
+}
+
+void VTG::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+
+    this->cogt = std::stof(lineArr[1]);
+    this->cogtUnit = *lineArr[2];
+    this->cogm = std::stof(lineArr[3]);
+    this->cogmUnit = *lineArr[4];
+    this->sogn = std::stof(lineArr[5]);
+    this->sognUnit = *lineArr[6];
+    this->sogk = std::stof(lineArr[7]);
+    this->sogkUnit = *lineArr[8];
+    this->posMode = *lineArr[9];
+}
+
+float_t VTG::getTrueCourseOverGround()
+{
+    return this->cogt;
+}
+
+char VTG::getTCOGUnit()
+{
+    return this->cogtUnit;
+}
+
+float_t VTG::getMagneticCourseOverGround()
+{
+    return this->cogm;
+}
+
+char VTG::getMCOGUnit()
+{
+    return this->cogmUnit;
+}
+
+float_t VTG::getSpeedOverGroundKnots()
+{
+    return this->sogn;
+}
+
+char VTG::getSOGNUnit()
+{
+    return this->sognUnit;
+}
+
+float_t VTG::getSpeedOverGroundKms()
+{
+    return this->sogk;
+}
+
+char VTG::getSOGKUnit()
+{
+    return this->sogkUnit;
+}
+
+char VTG::getPosMode()
+{
+    return this->posMode;
+}
+
+void VTG::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 12;
+    *maxLength = 12;
+}
+
+/* ------------------------- END VTG Definitions ------------------------ */VTG
