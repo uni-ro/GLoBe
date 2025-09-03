@@ -479,6 +479,15 @@ class RMC : public BASE, public POS, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    RMC(char ** lineArr, uint16_t length);
+    char getStatus();
+    float_t getSpeedOverGround();
+    float_t getCourseOverGround();
+    std::string getDate();
+    float_t getMagneticVariation();
+    char getMagneticVariationDir();
+    char getPosMode();
+    char getNavStatus();
 
     private:
     char status;
@@ -490,7 +499,10 @@ class RMC : public BASE, public POS, public TIME
     char posMode;
     char navStatus;
 
-   static const uint8_t nFields = 16; 
+   protected:
+   bool checkValidity() override;
+   void parseNMEA(char ** lineArr, uint16_t length) override;
+   void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**

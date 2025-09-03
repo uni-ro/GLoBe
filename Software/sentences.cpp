@@ -894,3 +894,92 @@ void RLM::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END RLM Definitions ------------------------ */
+
+
+/* -------------------------- RMC Definitions --------------------------- */
+
+RMC::RMC(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool RMC::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+    valid = valid && POS::checkValidity();
+
+    if (this->status != 'A')
+        valid = false;
+    
+    if (this->posMode == 'N')
+        valid = false;
+
+    if (this->navStatus != 'V') /* Fixed field so should always be V */
+        valid = false;
+
+    return valid;
+}
+
+void RMC::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+    POS::parseNMEA(lineArr[3], lineArr[4], lineArr[5], lineArr[6]);
+
+    this->time = std::string(lineArr[1]);
+    this->status = *lineArr[2];
+    this->spd = std::stof(lineArr[7]);
+    this->cog = std::stof(lineArr[8]);
+    this->date = std::string(lineArr[9]);
+    this->mv = std::stof(lineArr[10]);
+    this->mvEW = *lineArr[11];
+    this->posMode = *lineArr[12];
+    this->navStatus = *lineArr[13];
+}
+
+char RMC::getStatus()
+{
+    return this->status;
+}
+
+float_t RMC::getSpeedOverGround()
+{
+    return this->spd;
+}
+
+float_t RMC::getCourseOverGround()
+{
+    return this->cog;
+}
+
+std::string RMC::getDate()
+{
+    return this->date;
+}
+
+float_t RMC::getMagneticVariation()
+{
+    return this->mv;
+}
+
+char RMC::getMagneticVariationDir()
+{
+    return this->mvEW;
+}
+
+char RMC::getPosMode()
+{
+    return this->posMode;
+}
+
+char RMC::getNavStatus()
+{
+    return this->navStatus;
+}
+
+void RMC::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 16;
+    *maxLength = 16;
+}
+
+/* ------------------------- END RMC Definitions ------------------------ */
