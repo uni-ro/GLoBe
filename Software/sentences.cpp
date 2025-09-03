@@ -606,3 +606,84 @@ void GRS::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END GRS Definitions ------------------------ */
+
+
+/* -------------------------- GSA Definitions --------------------------- */
+
+GSA::GSA(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool GSA::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    if (this->navMode == 1) /* There was no fix for this sentence */
+        valid = false;
+
+    return valid;
+}
+
+void GSA::parseNMEA(char ** lineArr, uint16_t length)
+{
+    uint8_t i;
+
+    BASE::parseNMEA(lineArr, length);
+
+    this->opMode = *lineArr[1];
+    this->navMode = std::stoi(lineArr[2]);
+
+    for (i = 0; i < 12; i++)
+    {
+        this->svid[i] = std::stoi(lineArr[3 + i]);
+    }
+
+    this->PDOP = std::stof(lineArr[15]);
+    this->HDOP = std::stof(lineArr[16]);
+    this->VDOP = std::stof(lineArr[17]);
+    this->systemId = std::stoi(lineArr[18]);
+}
+
+char GSA::getOpMode()
+{
+    return this->opMode;
+}
+
+uint8_t GSA::getNavMode()
+{
+    return this->navMode;
+}
+
+const uint8_t * const GSA::getSVID()
+{
+    return this->svid;
+}
+
+float_t GSA::getPDOP()
+{
+    return this->PDOP;
+}
+
+float_t GSA::getHDOP()
+{
+    return this->HDOP;
+}
+
+float_t GSA::getVDOP()
+{
+    return this->VDOP;
+}
+
+uint8_t GSA::getSystemId()
+{
+    return this->systemId;
+}
+
+void GSA::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 21;
+    *maxLength = 21;
+}
+
+/* ------------------------- END GSA Definitions ------------------------ */

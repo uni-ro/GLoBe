@@ -363,6 +363,14 @@ class GSA : public BASE
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    GSA(char ** lineArr, uint16_t length);
+    char getOpMode();
+    uint8_t getNavMode();
+    const uint8_t * const getSVID();
+    float_t getPDOP();
+    float_t getHDOP();
+    float_t getVDOP();
+    uint8_t getSystemId();
 
     private:
     char opMode;
@@ -373,7 +381,10 @@ class GSA : public BASE
     float_t VDOP;
     uint8_t systemId;
 
-    static const uint8_t nFields = 21;
+    protected:
+    bool checkValidity();
+    void parseNMEA(char ** lineArr, uint16_t length);
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
