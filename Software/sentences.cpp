@@ -238,6 +238,90 @@ void DTM::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 /* ------------------------- END DTM Definitions ------------------------ */
 
 
+/* -------------------------- GBS Definitions --------------------------- */
+
+GBS::GBS(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool GBS::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+    
+    return valid;
+}
+
+void GBS::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+
+    this->time = std::string(lineArr[1]);
+    this->errLat = std::stof(lineArr[2]);
+    this->errLon = std::stof(lineArr[3]);
+    this->errAlt = std::stof(lineArr[4]);
+    this->svid = std::stoi(lineArr[5]);
+    this->prob = 255; /* Unsupported value (it is always fixed) */
+    this->bias = std::stof(lineArr[7]);
+    this->stddev = std::stof(lineArr[8]);
+    this->systemId = std::stoi(lineArr[9]);
+    this->signalId = std::stoi(lineArr[10]);
+}
+
+float_t GBS::getErrLat()
+{
+    return this->errLat;
+}
+
+float_t GBS::getErrLon()
+{
+    return this->errLon;
+}
+
+float_t GBS::getErrAlt()
+{
+    return this->errAlt;
+}
+
+uint8_t GBS::getSVID()
+{
+    return this->svid;
+}
+
+uint8_t GBS::getProb()
+{
+    return this->prob;
+}
+
+float_t GBS::getBias()
+{
+    return this->bias;
+}
+
+float_t GBS::getStdDeviation()
+{
+    return this->stddev;
+}
+
+uint8_t GBS::getSystemId()
+{
+    return this->systemId;
+}
+
+uint8_t GBS::getSignalId()
+{
+    return this->signalId;
+}
+
+void GBS::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 13;
+    *maxLength = 13;
+}
+
+/* ------------------------- END GBS Definitions ------------------------ */
+
+
 /* -------------------------- GLL Definitions --------------------------- */
 
 GLL::GLL(char ** lineArr, uint16_t length) : BASE(lineArr, length)

@@ -177,6 +177,17 @@ class GBS : public BASE, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    GBS(char ** lineArr, uint16_t length);
+    float_t getErrLat();
+    float_t getErrLon();
+    float_t getErrAlt();
+    uint8_t getSVID();
+    uint8_t getProb();   /* Unsupported */
+    float_t getBias();
+    float_t getStdDeviation();
+    uint8_t getSystemId();
+    uint8_t getSignalId();
+
 
     private:
     float_t errLat;
@@ -189,8 +200,10 @@ class GBS : public BASE, public TIME
     uint8_t systemId;
     uint8_t signalId;
 
-    static const uint8_t nFields = 13;
-
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
