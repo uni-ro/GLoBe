@@ -322,6 +322,100 @@ void GBS::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 /* ------------------------- END GBS Definitions ------------------------ */
 
 
+/* -------------------------- GGA Definitions --------------------------- */
+
+GGA::GGA(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool GGA::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+    
+    if (this->quality == 0)
+        valid = false;
+
+    if (this->altUnit != 'M')   /* Fixed field (ie. metres) */
+        valid = false;
+
+    if (this->sepUnit != 'M')   /* Fixed field (ie. metres) */
+        valid = false;
+
+    return valid;
+}
+
+void GGA::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+    POS::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5]);
+
+    this->time = std::string(lineArr[1]);
+    this->quality = std::stoi(lineArr[6]);
+    this->numSV = std::stoi(lineArr[7]);
+    this->HDOP = std::stof(lineArr[8]);
+    this->alt = std::stof(lineArr[9]);
+    this->altUnit = *lineArr[10];
+    this->sep = std::stof(lineArr[11]);
+    this->sepUnit = *lineArr[12];
+    this->diffAge = std::stoi(lineArr[13]);
+    this->diffStation = std::stoi(lineArr[14]);
+}
+
+uint8_t GGA::getQuality()
+{
+    return this->quality;
+}
+
+uint8_t GGA::getNumSatellites()
+{
+    return this->numSV;
+}
+
+float_t GGA::getHDOP()
+{
+    return this->HDOP;
+}
+
+float_t GGA::getAltitude()
+{
+    return this->alt;
+}
+
+char GGA::getAltitudeUnit()
+{
+    return this->altUnit;
+}
+
+float_t GGA::getGEOIDSep()
+{
+    return this->sep;
+}
+
+char GGA::getGEOIDSepUnit()
+{
+    return this->sepUnit;
+}
+
+uint16_t GGA::getDiffAge()
+{
+    return this->diffAge;
+}
+
+uint16_t GGA::getDiffStationID()
+{
+    return this->diffStation;
+}
+
+void GGA::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 17;
+    *maxLength = 17;
+}
+
+/* ------------------------- END GGA Definitions ------------------------ */
+
+
 /* -------------------------- GLL Definitions --------------------------- */
 
 GLL::GLL(char ** lineArr, uint16_t length) : BASE(lineArr, length)

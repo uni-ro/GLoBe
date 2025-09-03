@@ -213,6 +213,16 @@ class GGA : public BASE, public POS, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    GGA(char ** lineArr, uint16_t length);
+    uint8_t getQuality();
+    uint8_t getNumSatellites();
+    float_t getHDOP();
+    float_t getAltitude();
+    char getAltitudeUnit();
+    float_t getGEOIDSep();
+    char getGEOIDSepUnit();
+    uint16_t getDiffAge();
+    uint16_t getDiffStationID();
     
     private:
     uint8_t quality;
@@ -225,7 +235,10 @@ class GGA : public BASE, public POS, public TIME
     uint16_t diffAge;
     uint16_t diffStation;
 
-    static const uint8_t nFields = 17;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**
