@@ -332,6 +332,7 @@ GGA::GGA(char ** lineArr, uint16_t length) : BASE(lineArr, length)
 bool GGA::checkValidity()
 {
     bool valid = BASE::checkValidity();
+    valid = valid && POS::checkValidity();
     
     if (this->quality == 0)
         valid = false;
