@@ -129,17 +129,21 @@ class DTM : public BASE, public POS
     static const std::vector<std::string> acceptedTypes;
     DTM(char ** lineArr, uint16_t length);
 
+    std::string getDatum();
+    std::string getSubDatum();
+    float_t getAltitude();
+    std::string getReferenceDatum();
+
     private:
     std::string datum;
     std::string subDatum;
     float_t alt = 0;
     std::string refDatum;
- 
-    static const uint8_t nFields = 11;
 
     protected:
     bool checkValidity() override;
     void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /**

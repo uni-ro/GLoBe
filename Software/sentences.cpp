@@ -194,12 +194,7 @@ DTM::DTM(char ** lineArr, uint16_t length) : BASE(lineArr, length)
 bool DTM::checkValidity()
 {
     bool valid = BASE::checkValidity();
-
-    if (this->NS != 'N' && this->NS != 'S')
-        valid = false;
-    
-    if (this->EW != 'E' && this->EW !='W')
-        valid = false;
+    valid = valid && POS::checkValidity();
 
     if (this->refDatum.compare("W84") != 0)
         valid = false;
@@ -210,15 +205,38 @@ bool DTM::checkValidity()
 void DTM::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
+    POS::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5]);
 
     this->datum = std::string(lineArr[0]);
     this->subDatum = std::string(lineArr[1]);
-    this->lat = degMin2DecDeg(std::stof(lineArr[2], NULL));
-    this->NS = *lineArr[3];
-    this->lon = degMin2DecDeg(std::stof(lineArr[4], NULL));
-    this->EW = *lineArr[5];
     this->alt = std::stof(lineArr[6], NULL);
     this->refDatum = std::string(lineArr[7]);
+}
+
+std::string DTM::getDatum()
+{
+    return this->datum;
+}
+
+std::string DTM::getSubDatum()
+{
+    return this->subDatum;
+}
+
+float_t DTM::getAltitude()
+{
+    return this->alt;
+}
+
+std::string DTM::getReferenceDatum()
+{
+    return this->refDatum;
+}
+
+void DTM::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 11;
+    *maxLength = 11;
 }
 
 /* ------------------------- END DTM Definitions ------------------------ */
