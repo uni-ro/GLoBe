@@ -1223,3 +1223,75 @@ void VTG::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 }
 
 /* ------------------------- END VTG Definitions ------------------------ */
+
+
+/* -------------------------- ZDA Definitions --------------------------- */
+
+ZDA::ZDA(char ** lineArr, uint16_t length) : BASE(lineArr, length)
+{
+
+}
+
+bool ZDA::checkValidity()
+{
+    bool valid = BASE::checkValidity();
+
+    if (this->day < 1 || this->day > 31)
+        valid = false;
+
+    if (this->month < 1 || this-> month > 12)
+        valid = false;
+
+    if (this->ltzh != 0)
+        valid = false;
+
+    if (this->ltzn != 0)
+        valid = false;
+
+    return valid;
+}
+
+void ZDA::parseNMEA(char ** lineArr, uint16_t length)
+{
+    BASE::parseNMEA(lineArr, length);
+
+    this->time = std::string(lineArr[1]);
+    this->day = std::stoi(lineArr[2]);
+    this->month = std::stoi(lineArr[3]);
+    this->year = std::stoi(lineArr[4]);
+    this->ltzh = std::stoi(lineArr[5]);
+    this->ltzn = std::stoi(lineArr[6]);
+}
+
+uint8_t ZDA::getDay()
+{
+    return this->day;
+}
+
+uint8_t ZDA::getMonth()
+{
+    return this->month;
+}
+
+uint16_t ZDA::getYear()
+{
+    return this->year;
+}
+
+uint8_t ZDA::getLocalTimezoneHrs()
+{
+    return this->ltzh;
+}
+
+uint8_t ZDA::getLocalTimezoneMins()
+{
+    return this->ltzn;
+}
+
+void ZDA::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
+{
+    *minLength = 9;
+    *maxLength = 9;
+}
+
+/* ------------------------- END ZDA Definitions ------------------------ */

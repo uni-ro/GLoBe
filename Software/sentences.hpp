@@ -605,15 +605,24 @@ class ZDA : public BASE, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
+    ZDA(char ** lineArr, uint16_t length);
+    uint8_t getDay();
+    uint8_t getMonth();
+    uint16_t getYear();
+    uint8_t getLocalTimezoneHrs();
+    uint8_t getLocalTimezoneMins();
 
     private:
-    uint8_t dat;
+    uint8_t day;
     uint8_t month;
     uint16_t year;
     uint8_t ltzh; /* Fixed field: 00 */
     uint8_t ltzn; /* Fixed field: 00 */
 
-    static const uint8_t nFields = 9;
+    protected:
+    bool checkValidity() override;
+    void parseNMEA(char ** lineArr, uint16_t length) override;
+    void getSentenceBounds(uint8_t * minLength, uint8_t * maxLength) override;
 };
 
 /* Include the template implementation after declaration
