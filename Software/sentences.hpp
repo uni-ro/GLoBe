@@ -10,6 +10,7 @@
 #include "stringslib.h"
 #include <ctime>
 #include "gnss.h"
+#include <compare>
 
 /**
  * The struct to represent satellite data for getting satellites in view
@@ -130,17 +131,17 @@ class POS
 {
     public:
     static const std::vector<std::string> acceptedTypes;
-    const float_t getLatitude();
-    const float_t getLongitude();
+    const Field<float_t> getLatitude();
+    const Field<float_t> getLongitude();
     POS * const getPosition();
 
     static float_t degMin2DecDeg(float_t coords);
 
     protected:
-    float_t lat = 0;
-    char NS = '\0';
-    float_t lon = 0;
-    char EW = '\0';
+    Field<float_t> lat;
+    Field<char> NS;
+    Field<float_t> lon;
+    Field<char> EW;
     
     bool checkValidity();
     void parseNMEA(char * lat, char * NS, char * lon, char * EW);
@@ -153,10 +154,10 @@ class TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
-    const std::string getTime();
+    const Field<std::string> getTime();
 
     protected:
-    std::string time;
+    Field<std::string> time{"000000.00"};
 };
 
 /**
@@ -168,16 +169,16 @@ class DTM : public BASE, public POS
     static const std::vector<std::string> acceptedTypes;
     DTM(char ** lineArr, uint16_t length);
 
-    std::string getDatum();
-    std::string getSubDatum();
-    float_t getAltitude();
-    std::string getReferenceDatum();
+    Field<std::string> getDatum();
+    Field<std::string> getSubDatum();
+    Field<float_t> getAltitude();
+    Field<std::string> getReferenceDatum();
 
     private:
-    std::string datum;
-    std::string subDatum;
-    float_t alt = 0;
-    std::string refDatum;
+    Field<std::string> datum;
+    Field<std::string> subDatum;
+    Field<float_t> alt;
+    Field<std::string> refDatum;
 
     protected:
     bool checkValidity() override;
@@ -217,27 +218,27 @@ class GBS : public BASE, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     GBS(char ** lineArr, uint16_t length);
-    float_t getErrLat();
-    float_t getErrLon();
-    float_t getErrAlt();
-    uint8_t getSVID();
-    uint8_t getProb();   /* Unsupported */
-    float_t getBias();
-    float_t getStdDeviation();
-    uint8_t getSystemId();
-    uint8_t getSignalId();
+    Field<float_t> getErrLat();
+    Field<float_t> getErrLon();
+    Field<float_t> getErrAlt();
+    Field<uint8_t> getSVID();
+    Field<uint8_t> getProb();   /* Unsupported */
+    Field<float_t> getBias();
+    Field<float_t> getStdDeviation();
+    Field<uint8_t> getSystemId();
+    Field<uint8_t> getSignalId();
 
 
     private:
-    float_t errLat;
-    float_t errLon;
-    float_t errAlt;
-    uint8_t svid;
-    uint8_t prob;   /* Unsupported */
-    float_t bias;
-    float_t stddev;
-    uint8_t systemId;
-    uint8_t signalId;
+    Field<float_t> errLat;
+    Field<float_t> errLon;
+    Field<float_t> errAlt;
+    Field<uint8_t> svid;
+    Field<uint8_t> prob;   /* Unsupported */
+    Field<float_t> bias;
+    Field<float_t> stddev;
+    Field<uint8_t> systemId;
+    Field<uint8_t> signalId;
 
     protected:
     bool checkValidity() override;
@@ -253,26 +254,26 @@ class GGA : public BASE, public POS, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     GGA(char ** lineArr, uint16_t length);
-    uint8_t getQuality();
-    uint8_t getNumSatellites();
-    float_t getHDOP();
-    float_t getAltitude();
-    char getAltitudeUnit();
-    float_t getGEOIDSep();
-    char getGEOIDSepUnit();
-    uint16_t getDiffAge();
-    uint16_t getDiffStationID();
+    Field<uint8_t> getQuality();
+    Field<uint8_t> getNumSatellites();
+    Field<float_t> getHDOP();
+    Field<float_t> getAltitude();
+    Field<char> getAltitudeUnit();
+    Field<float_t> getGEOIDSep();
+    Field<char> getGEOIDSepUnit();
+    Field<uint16_t> getDiffAge();
+    Field<uint16_t> getDiffStationID();
     
     private:
-    uint8_t quality;
-    uint8_t numSV;
-    float_t HDOP;
-    float_t alt;
-    char altUnit;
-    float_t sep;
-    char sepUnit;
-    uint16_t diffAge;
-    uint16_t diffStation;
+    Field<uint8_t> quality;
+    Field<uint8_t> numSV;
+    Field<float_t> HDOP;
+    Field<float_t> alt;
+    Field<char> altUnit;
+    Field<float_t> sep;
+    Field<char> sepUnit;
+    Field<uint16_t> diffAge;
+    Field<uint16_t> diffStation;
 
     protected:
     bool checkValidity() override;
@@ -288,12 +289,12 @@ class GLL : public BASE, public POS, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     GLL(char ** lineArr, uint16_t length);
-    const char getStatus();
-    const char getPosMode();
+    const Field<char> getStatus();
+    const Field<char> getPosMode();
 
     private:
-    char status = '\0';
-    char posMode = '\0';
+    Field<char> status;
+    Field<char> posMode;
 
     protected:
     bool checkValidity() override;
@@ -333,24 +334,24 @@ class GNS : public BASE, public POS, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     GNS(char ** lineArr, uint16_t length);
-    std::string getPosMode();
-    uint8_t getNumSV();
-    float_t getHDOP();
-    float_t getAltitude();
-    float_t getGEOIDSep();
-    uint16_t getDiffAge();
-    uint16_t getDiffStationID();
-    char getNavStatus();
+    Field<std::string> getPosMode();
+    Field<uint8_t> getNumSV();
+    Field<float_t> getHDOP();
+    Field<float_t> getAltitude();
+    Field<float_t> getGEOIDSep();
+    Field<uint16_t> getDiffAge();
+    Field<uint16_t> getDiffStationID();
+    Field<char> getNavStatus();
 
     private:
-    std::string posMode;
-    uint8_t numSV;
-    float_t HDOP;
-    float_t alt;
-    float_t sep;
-    uint16_t diffAge;
-    uint16_t diffStation;
-    char navStatus;
+    Field<std::string> posMode;
+    Field<uint8_t> numSV;
+    Field<float_t> HDOP;
+    Field<float_t> alt;
+    Field<float_t> sep;
+    Field<uint16_t> diffAge;
+    Field<uint16_t> diffStation;
+    Field<char> navStatus;
 
     protected:
     bool checkValidity() override;
@@ -378,16 +379,16 @@ class GRS : public BASE, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     GRS(char ** lineArr, uint16_t length);
-    uint8_t getComputationMethod();
-    const float_t * const getResiduals();
-    uint8_t getSystemId();
-    uint8_t getSingalId();
+    Field<uint8_t> getComputationMethod();
+    const Field<float_t> * const getResiduals();
+    Field<uint8_t> getSystemId();
+    Field<uint8_t> getSingalId();
     
     private:
-    uint8_t mode;
-    float_t residual[12];
-    uint8_t systemId;
-    uint8_t singalId;
+    Field<uint8_t> mode;
+    Field<float_t> residual[12];
+    Field<uint8_t> systemId;
+    Field<uint8_t> singalId;
 
     protected:
     bool checkValidity() override;
@@ -403,22 +404,22 @@ class GSA : public BASE
     public:
     static const std::vector<std::string> acceptedTypes;
     GSA(char ** lineArr, uint16_t length);
-    char getOpMode();
-    uint8_t getNavMode();
-    const uint8_t * const getSVID();
-    float_t getPDOP();
-    float_t getHDOP();
-    float_t getVDOP();
-    uint8_t getSystemId();
+    Field<char> getOpMode();
+    Field<uint8_t> getNavMode();
+    const Field<uint8_t> * const getSVID();
+    Field<float_t> getPDOP();
+    Field<float_t> getHDOP();
+    Field<float_t> getVDOP();
+    Field<uint8_t> getSystemId();
 
     private:
-    char opMode;
-    uint8_t navMode;
-    uint8_t svid[12];
-    float_t PDOP;
-    float_t HDOP;
-    float_t VDOP;
-    uint8_t systemId;
+    Field<char> opMode;
+    Field<uint8_t> navMode;
+    Field<uint8_t> svid[12];
+    Field<float_t> PDOP;
+    Field<float_t> HDOP;
+    Field<float_t> VDOP;
+    Field<uint8_t> systemId;
 
     protected:
     bool checkValidity() override;
@@ -434,22 +435,22 @@ class GST : public BASE, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     GST(char ** lineArr, uint16_t length);
-    float_t getRangeRMS();
-    float_t getStdMajor();
-    float_t getStdMinor();
-    float_t getOrientation();
-    float_t getStdLatitude();
-    float_t getStdLongitude();
-    float_t getStdAltitude();
+    Field<float_t> getRangeRMS();
+    Field<float_t> getStdMajor();
+    Field<float_t> getStdMinor();
+    Field<float_t> getOrientation();
+    Field<float_t> getStdLatitude();
+    Field<float_t> getStdLongitude();
+    Field<float_t> getStdAltitude();
 
     private:
-    float_t rangeRms;
-    float_t stdMajor;
-    float_t stdMinor;
-    float_t orient;
-    float_t stdLat;
-    float_t stdLong;
-    float_t stdAlt;
+    Field<float_t> rangeRms;
+    Field<float_t> stdMajor;
+    Field<float_t> stdMinor;
+    Field<float_t> orient;
+    Field<float_t> stdLat;
+    Field<float_t> stdLong;
+    Field<float_t> stdAlt;
 
     protected:
     bool checkValidity() override;
@@ -465,19 +466,19 @@ class GSV : public BASE
     public:
     static const std::vector<std::string> acceptedTypes;
     GSV(char ** lineArr, uint16_t length);
-    uint8_t getNumMessages();
-    uint8_t getMessageNum();
-    uint8_t getNumSatellites();
-    const SatData * const getSatellites(uint8_t * const arrLength);
-    uint8_t getSignalId();
+    Field<uint8_t> getNumMessages();
+    Field<uint8_t> getMessageNum();
+    Field<uint8_t> getNumSatellites();
+    const Field<SatData> * const getSatellites(uint8_t * const arrLength);
+    Field<uint8_t> getSignalId();
 
     private:
-    uint8_t numMsg;
-    uint8_t msgNum;
-    uint8_t numSV;
-    SatData * satellites = NULL; /* Note: can appear up to 4 times, not always 4. */
-    uint8_t satellitesLength;
-    uint8_t signalId;
+    Field<uint8_t> numMsg;
+    Field<uint8_t> msgNum;
+    Field<uint8_t> numSV;
+    Field<SatData> * satellites = NULL; /* Note: can appear up to 4 times, not always 4. */
+    uint8_t satellitesLength = 0;
+    Field<uint8_t> signalId;
 
     protected:
     bool checkValidity() override;
@@ -496,14 +497,14 @@ class RLM : public BASE, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     RLM(char ** lineArr, uint16_t length);
-    uint64_t getBeacon();
-    char getCode();
-    uint64_t getBody();
+    Field<uint64_t> getBeacon();
+    Field<char> getCode();
+    Field<uint64_t> getBody();
 
     private:
-    uint64_t beacon;
-    char code;
-    uint64_t body; /* Check that the value cannot exceed 64bit */
+    Field<uint64_t> beacon;
+    Field<char> code;
+    Field<uint64_t> body; /* Check that the value cannot exceed 64bit */
 
     protected:
     bool checkValidity() override;
@@ -519,24 +520,24 @@ class RMC : public BASE, public POS, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     RMC(char ** lineArr, uint16_t length);
-    char getStatus();
-    float_t getSpeedOverGround();
-    float_t getCourseOverGround();
-    std::string getDate();
-    float_t getMagneticVariation();
-    char getMagneticVariationDir();
-    char getPosMode();
-    char getNavStatus();
+    Field<char> getStatus();
+    Field<float_t> getSpeedOverGround();
+    Field<float_t> getCourseOverGround();
+    Field<std::string> getDate();
+    Field<float_t> getMagneticVariation();
+    Field<char> getMagneticVariationDir();
+    Field<char> getPosMode();
+    Field<char> getNavStatus();
 
     private:
-    char status;
-    float_t spd;
-    float_t cog;
-    std::string date;
-    float_t mv;
-    char mvEW;
-    char posMode;
-    char navStatus;
+    Field<char> status;
+    Field<float_t> spd;
+    Field<float_t> cog;
+    Field<std::string> date;
+    Field<float_t> mv;
+    Field<char> mvEW;
+    Field<char> posMode;
+    Field<char> navStatus;
 
    protected:
    bool checkValidity() override;
@@ -552,16 +553,16 @@ class TXT : public BASE
     public:
     static const std::vector<std::string> acceptedTypes;
     TXT(char ** lineArr, uint16_t length);
-    uint8_t getNumMessages();
-    uint8_t getMessageNum();
-    uint8_t getMessageType();
-    std::string getText();
+    Field<uint8_t> getNumMessages();
+    Field<uint8_t> getMessageNum();
+    Field<uint8_t> getMessageType();
+    Field<std::string> getText();
 
     private:
-    uint8_t numMsg;
-    uint8_t msgNum;
-    uint8_t msgType;
-    std::string text;
+    Field<uint8_t> numMsg;
+    Field<uint8_t> msgNum;
+    Field<uint8_t> msgType;
+    Field<std::string> text;
 
     protected:
     bool checkValidity() override;
@@ -577,24 +578,24 @@ class VLW : public BASE
     public:
     static const std::vector<std::string> acceptedTypes;
     VLW(char ** lineArr, uint16_t length);
-    uint8_t getTotalWaterDist(); /* Fixed field: null */
-    char getTWDUnit();
-    uint8_t getWaterDist(); /* Fixed field: null */
-    char getWDUnit();
-    float_t getTotalGroundDist();
-    char getTGDUnit();
-    float_t getGroundDist();
-    char getGDUnit();
+    Field<uint8_t> getTotalWaterDist(); /* Fixed field: null */
+    Field<char> getTWDUnit();
+    Field<uint8_t> getWaterDist(); /* Fixed field: null */
+    Field<char> getWDUnit();
+    Field<float_t> getTotalGroundDist();
+    Field<char> getTGDUnit();
+    Field<float_t> getGroundDist();
+    Field<char> getGDUnit();
 
     private:
-    uint8_t twd; /* Fixed field: null */
-    char twdUnit;
-    uint8_t wd; /* Fixed field: null */
-    char wdUnit;
-    float_t tgd;
-    char tgdUnit;
-    float_t gd;
-    char gdUnit;
+    Field<uint8_t> twd; /* Fixed field: null */
+    Field<char> twdUnit;
+    Field<uint8_t> wd; /* Fixed field: null */
+    Field<char> wdUnit;
+    Field<float_t> tgd;
+    Field<char> tgdUnit;
+    Field<float_t> gd;
+    Field<char> gdUnit;
 
     protected:
     bool checkValidity() override;
@@ -610,26 +611,26 @@ class VTG : public BASE
     public:
     static const std::vector<std::string> acceptedTypes;
     VTG(char ** lineArr, uint16_t length);
-    float_t getTrueCourseOverGround();
-    char getTCOGUnit();
-    float_t getMagneticCourseOverGround();
-    char getMCOGUnit();
-    float_t getSpeedOverGroundKnots();
-    char getSOGNUnit();
-    float_t getSpeedOverGroundKms();
-    char getSOGKUnit();
-    char getPosMode();
+    Field<float_t> getTrueCourseOverGround();
+    Field<char> getTCOGUnit();
+    Field<float_t> getMagneticCourseOverGround();
+    Field<char> getMCOGUnit();
+    Field<float_t> getSpeedOverGroundKnots();
+    Field<char> getSOGNUnit();
+    Field<float_t> getSpeedOverGroundKms();
+    Field<char> getSOGKUnit();
+    Field<char> getPosMode();
 
     private:
-    float_t cogt;
-    char cogtUnit; /* Fixed field: T */
-    float_t cogm;
-    char cogmUnit; /* Fixed field: M */
-    float_t sogn;
-    char sognUnit;
-    float_t sogk;
-    char sogkUnit; /* Fixed field: N */
-    char posMode;
+    Field<float_t> cogt;
+    Field<char> cogtUnit; /* Fixed field: T */
+    Field<float_t> cogm;
+    Field<char> cogmUnit; /* Fixed field: M */
+    Field<float_t> sogn;
+    Field<char> sognUnit;
+    Field<float_t> sogk;
+    Field<char> sogkUnit; /* Fixed field: N */
+    Field<char> posMode;
 
     protected:
     bool checkValidity() override;
@@ -645,18 +646,18 @@ class ZDA : public BASE, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     ZDA(char ** lineArr, uint16_t length);
-    uint8_t getDay();
-    uint8_t getMonth();
-    uint16_t getYear();
-    uint8_t getLocalTimezoneHrs();
-    uint8_t getLocalTimezoneMins();
+    Field<uint8_t> getDay();
+    Field<uint8_t> getMonth();
+    Field<uint16_t> getYear();
+    Field<uint8_t> getLocalTimezoneHrs();
+    Field<uint8_t> getLocalTimezoneMins();
 
     private:
-    uint8_t day;
-    uint8_t month;
-    uint16_t year;
-    uint8_t ltzh; /* Fixed field: 00 */
-    uint8_t ltzn; /* Fixed field: 00 */
+    Field<uint8_t> day;
+    Field<uint8_t> month;
+    Field<uint16_t> year;
+    Field<uint8_t> ltzh; /* Fixed field: 00 */
+    Field<uint8_t> ltzn; /* Fixed field: 00 */
 
     protected:
     bool checkValidity() override;

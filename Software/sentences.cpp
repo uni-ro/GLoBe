@@ -117,7 +117,7 @@ bool POS::checkValidity()
     if (this->NS != 'N' && this->NS != 'S')
             valid = false;
         
-    if (this->EW != 'E' && this->EW !='W')
+    if (this->EW != 'E' && this->EW != 'W')
         valid = false;
         
     return valid;
@@ -132,15 +132,29 @@ void POS::parseNMEA(char * lat, char * NS, char * lon, char * EW)
 }
 
 /* Returns the latitude (positive if north, negative if south) */
-const float_t POS::getLatitude()
+const Field<float_t> POS::getLatitude()
 {
-    return this->lat * (this->NS == 'N' ? 1 : -1);
+    Field<float_t> lat(this->lat);
+
+    if (lat.getValid() && this->NS.getValid())
+    {
+        lat.setValue(this->lat * (this->NS == 'N' ? 1 : -1), true);
+    }
+
+    return lat;
 }
 
 /* Returns the longitude (positive if east, negative is west) */
-const float_t POS::getLongitude()
+const Field<float_t> POS::getLongitude()
 {
-    return this->lon * (this->EW == 'E' ? 1 : -1);
+    Field<float_t> lon(this->lon);
+
+    if (lon.getValid() && this->EW.getValid())
+    {
+        lon.setValue(this->lon * (this->EW == 'E' ? 1 : -1), true);
+    }
+
+    return lon;
 }
 
 POS * const POS::getPosition()
@@ -179,9 +193,9 @@ float_t POS::degMin2DecDeg(float_t coords)
 
 /* -------------------------- TIME Definitions -------------------------- */
 
-const std::string TIME::getTime()
+const Field<std::string> TIME::getTime()
 {
-    return time;
+    return this->time;
 }
     
 /* ------------------------ END TIME Definitions ------------------------ */
@@ -199,7 +213,7 @@ bool DTM::checkValidity()
     bool valid = BASE::checkValidity();
     valid = valid && POS::checkValidity();
 
-    if (this->refDatum.compare("W84") != 0)
+    if (this->refDatum == "W84")
         valid = false;
     
     return valid;
@@ -216,22 +230,22 @@ void DTM::parseNMEA(char ** lineArr, uint16_t length)
     this->refDatum = std::string(lineArr[7]);
 }
 
-std::string DTM::getDatum()
+Field<std::string> DTM::getDatum()
 {
     return this->datum;
 }
 
-std::string DTM::getSubDatum()
+Field<std::string> DTM::getSubDatum()
 {
     return this->subDatum;
 }
 
-float_t DTM::getAltitude()
+Field<float_t> DTM::getAltitude()
 {
     return this->alt;
 }
 
-std::string DTM::getReferenceDatum()
+Field<std::string> DTM::getReferenceDatum()
 {
     return this->refDatum;
 }
@@ -275,47 +289,47 @@ void GBS::parseNMEA(char ** lineArr, uint16_t length)
     this->signalId = std::stoi(lineArr[10]);
 }
 
-float_t GBS::getErrLat()
+Field<float_t> GBS::getErrLat()
 {
     return this->errLat;
 }
 
-float_t GBS::getErrLon()
+Field<float_t> GBS::getErrLon()
 {
     return this->errLon;
 }
 
-float_t GBS::getErrAlt()
+Field<float_t> GBS::getErrAlt()
 {
     return this->errAlt;
 }
 
-uint8_t GBS::getSVID()
+Field<uint8_t> GBS::getSVID()
 {
     return this->svid;
 }
 
-uint8_t GBS::getProb()
+Field<uint8_t> GBS::getProb()
 {
     return this->prob;
 }
 
-float_t GBS::getBias()
+Field<float_t> GBS::getBias()
 {
     return this->bias;
 }
 
-float_t GBS::getStdDeviation()
+Field<float_t> GBS::getStdDeviation()
 {
     return this->stddev;
 }
 
-uint8_t GBS::getSystemId()
+Field<uint8_t> GBS::getSystemId()
 {
     return this->systemId;
 }
 
-uint8_t GBS::getSignalId()
+Field<uint8_t> GBS::getSignalId()
 {
     return this->signalId;
 }
@@ -370,47 +384,47 @@ void GGA::parseNMEA(char ** lineArr, uint16_t length)
     this->diffStation = std::stoi(lineArr[14]);
 }
 
-uint8_t GGA::getQuality()
+Field<uint8_t> GGA::getQuality()
 {
     return this->quality;
 }
 
-uint8_t GGA::getNumSatellites()
+Field<uint8_t> GGA::getNumSatellites()
 {
     return this->numSV;
 }
 
-float_t GGA::getHDOP()
+Field<float_t> GGA::getHDOP()
 {
     return this->HDOP;
 }
 
-float_t GGA::getAltitude()
+Field<float_t> GGA::getAltitude()
 {
     return this->alt;
 }
 
-char GGA::getAltitudeUnit()
+Field<char> GGA::getAltitudeUnit()
 {
     return this->altUnit;
 }
 
-float_t GGA::getGEOIDSep()
+Field<float_t> GGA::getGEOIDSep()
 {
     return this->sep;
 }
 
-char GGA::getGEOIDSepUnit()
+Field<char> GGA::getGEOIDSepUnit()
 {
     return this->sepUnit;
 }
 
-uint16_t GGA::getDiffAge()
+Field<uint16_t> GGA::getDiffAge()
 {
     return this->diffAge;
 }
 
-uint16_t GGA::getDiffStationID()
+Field<uint16_t> GGA::getDiffStationID()
 {
     return this->diffStation;
 }
@@ -452,12 +466,12 @@ void GLL::parseNMEA(char ** lineArr, uint16_t length)
     this->posMode = *lineArr[7];
 }
 
-const char GLL::getStatus()
+const Field<char> GLL::getStatus()
 {
     return this->status;
 }
 
-const char GLL::getPosMode()
+const Field<char> GLL::getPosMode()
 {
     return this->posMode;
 }
@@ -505,42 +519,42 @@ void GNS::parseNMEA(char ** lineArr, uint16_t length)
     this->navStatus = *lineArr[13];
 }
 
-std::string GNS::getPosMode()
+Field<std::string> GNS::getPosMode()
 {
     return this->posMode;
 }
 
-uint8_t GNS::getNumSV()
+Field<uint8_t> GNS::getNumSV()
 {
     return this->numSV;
 }
 
-float_t GNS::getHDOP()
+Field<float_t> GNS::getHDOP()
 {
     return this->HDOP;
 }
 
-float_t GNS::getAltitude()
+Field<float_t> GNS::getAltitude()
 {
     return this->alt;
 }
 
-float_t GNS::getGEOIDSep()
+Field<float_t> GNS::getGEOIDSep()
 {
     return this->sep;
 }
 
-uint16_t GNS::getDiffAge()
+Field<uint16_t> GNS::getDiffAge()
 {
     return this->diffAge;
 }
 
-uint16_t GNS::getDiffStationID()
+Field<uint16_t> GNS::getDiffStationID()
 {
     return this->diffStation;
 }
 
-char GNS::getNavStatus()
+Field<char> GNS::getNavStatus()
 {
     return this->navStatus;
 }
@@ -586,22 +600,22 @@ void GRS::parseNMEA(char ** lineArr, uint16_t length)
     this->singalId = std::stoi(lineArr[16]);
 }
 
-uint8_t GRS::getComputationMethod()
+Field<uint8_t> GRS::getComputationMethod()
 {
     return this->mode;
 }
 
-const float_t * const GRS::getResiduals()
+const Field<float_t> * const GRS::getResiduals()
 {
     return this->residual;
 }
 
-uint8_t GRS::getSystemId()
+Field<uint8_t> GRS::getSystemId()
 {
     return this->systemId;
 }
 
-uint8_t GRS::getSingalId()
+Field<uint8_t> GRS::getSingalId()
 {
     return this->singalId;
 }
@@ -652,37 +666,37 @@ void GSA::parseNMEA(char ** lineArr, uint16_t length)
     this->systemId = std::stoi(lineArr[18]);
 }
 
-char GSA::getOpMode()
+Field<char> GSA::getOpMode()
 {
     return this->opMode;
 }
 
-uint8_t GSA::getNavMode()
+Field<uint8_t> GSA::getNavMode()
 {
     return this->navMode;
 }
 
-const uint8_t * const GSA::getSVID()
+const Field<uint8_t> * const GSA::getSVID()
 {
     return this->svid;
 }
 
-float_t GSA::getPDOP()
+Field<float_t> GSA::getPDOP()
 {
     return this->PDOP;
 }
 
-float_t GSA::getHDOP()
+Field<float_t> GSA::getHDOP()
 {
     return this->HDOP;
 }
 
-float_t GSA::getVDOP()
+Field<float_t> GSA::getVDOP()
 {
     return this->VDOP;
 }
 
-uint8_t GSA::getSystemId()
+Field<uint8_t> GSA::getSystemId()
 {
     return this->systemId;
 }
@@ -724,37 +738,37 @@ void GST::parseNMEA(char ** lineArr, uint16_t length)
     this->stdAlt = std::stof(lineArr[8]);
 }
 
-float_t GST::getRangeRMS()
+Field<float_t> GST::getRangeRMS()
 {
     return this->rangeRms;
 }
 
-float_t GST::getStdMajor()
+Field<float_t> GST::getStdMajor()
 {
     return this->stdMajor;
 }
 
-float_t GST::getStdMinor()
+Field<float_t> GST::getStdMinor()
 {
     return this->stdMinor;
 }
 
-float_t GST::getOrientation()
+Field<float_t> GST::getOrientation()
 {
     return this->orient;
 }
 
-float_t GST::getStdLatitude()
+Field<float_t> GST::getStdLatitude()
 {
     return this->stdLat;
 }
 
-float_t GST::getStdLongitude()
+Field<float_t> GST::getStdLongitude()
 {
     return this->stdLong;
 }
 
-float_t GST::getStdAltitude()
+Field<float_t> GST::getStdAltitude()
 {
     return this->stdAlt;
 }
@@ -795,36 +809,41 @@ void GSV::parseNMEA(char ** lineArr, uint16_t length)
     /* Number of repeated groups = (total length - fixed length) / fields in group */
     nGroups = (length - 6) / 4;
 
-    this->satellites = new SatData[nGroups];
+    this->satellites = new Field<SatData>[nGroups];
     this->satellitesLength = nGroups;
+
+    SatData tempData;
 
     for (i = 0; i < nGroups; i++)
     {
-        this->satellites[i].svid = std::stoi(lineArr[4 + 4*i]);
-        this->satellites[i].elv = std::stoi(lineArr[5 + 4*i]);
-        this->satellites[i].az = std::stoi(lineArr[6 + 4*i]);
-        this->satellites[i].cno = std::stoi(lineArr[7 + 4*i]);
+        
+        tempData.svid = std::stoi(lineArr[4 + 4*i]);
+        tempData.elv = std::stoi(lineArr[5 + 4*i]);
+        tempData.az = std::stoi(lineArr[6 + 4*i]);
+        tempData.cno = std::stoi(lineArr[7 + 4*i]);
+
+        this->satellites[0].setValue(tempData, true);
     }
 
     this->signalId = std::stoi(lineArr[4 + 4*nGroups]);
 }
 
-uint8_t GSV::getNumMessages()
+Field<uint8_t> GSV::getNumMessages()
 {
     return this->numMsg;
 }
 
-uint8_t GSV::getMessageNum()
+Field<uint8_t> GSV::getMessageNum()
 {
     return this->msgNum;
 }
 
-uint8_t GSV::getNumSatellites()
+Field<uint8_t> GSV::getNumSatellites()
 {
     return this->numSV;
 }
 
-const SatData * const GSV::getSatellites(uint8_t * const arrLength)
+const Field<SatData> * const GSV::getSatellites(uint8_t * const arrLength)
 {
     if (arrLength != NULL)
     {
@@ -834,7 +853,7 @@ const SatData * const GSV::getSatellites(uint8_t * const arrLength)
     return this->satellites;
 }
 
-uint8_t GSV::getSignalId()
+Field<uint8_t> GSV::getSignalId()
 {
     return this->signalId;
 }
@@ -879,17 +898,17 @@ void RLM::parseNMEA(char ** lineArr, uint16_t length)
     this->body = std::stoi(lineArr[4], NULL, 16);
 }
 
-uint64_t RLM::getBeacon()
+Field<uint64_t> RLM::getBeacon()
 {
     return this->beacon;
 }
 
-char RLM::getCode()
+Field<char> RLM::getCode()
 {
     return this->code;
 }
 
-uint64_t RLM::getBody()
+Field<uint64_t> RLM::getBody()
 {
     return this->body;
 }
@@ -943,42 +962,42 @@ void RMC::parseNMEA(char ** lineArr, uint16_t length)
     this->navStatus = *lineArr[13];
 }
 
-char RMC::getStatus()
+Field<char> RMC::getStatus()
 {
     return this->status;
 }
 
-float_t RMC::getSpeedOverGround()
+Field<float_t> RMC::getSpeedOverGround()
 {
     return this->spd;
 }
 
-float_t RMC::getCourseOverGround()
+Field<float_t> RMC::getCourseOverGround()
 {
     return this->cog;
 }
 
-std::string RMC::getDate()
+Field<std::string> RMC::getDate()
 {
     return this->date;
 }
 
-float_t RMC::getMagneticVariation()
+Field<float_t> RMC::getMagneticVariation()
 {
     return this->mv;
 }
 
-char RMC::getMagneticVariationDir()
+Field<char> RMC::getMagneticVariationDir()
 {
     return this->mvEW;
 }
 
-char RMC::getPosMode()
+Field<char> RMC::getPosMode()
 {
     return this->posMode;
 }
 
-char RMC::getNavStatus()
+Field<char> RMC::getNavStatus()
 {
     return this->navStatus;
 }
@@ -1016,22 +1035,22 @@ void TXT::parseNMEA(char ** lineArr, uint16_t length)
     this->text = std::string(lineArr[4]);
 }
 
-uint8_t TXT::getNumMessages()
+Field<uint8_t> TXT::getNumMessages()
 {
     return this->numMsg;
 }
 
-uint8_t TXT::getMessageNum()
+Field<uint8_t> TXT::getMessageNum()
 {
     return this->msgNum;
 }
 
-uint8_t TXT::getMessageType()
+Field<uint8_t> TXT::getMessageType()
 {
     return this->msgType;
 }
 
-std::string TXT::getText()
+Field<std::string> TXT::getText()
 {
     return this->text;
 }
@@ -1085,42 +1104,42 @@ void VLW::parseNMEA(char ** lineArr, uint16_t length)
     this->gdUnit = *lineArr[8]; /* Fixed field: N */
 }
 
-uint8_t VLW::getTotalWaterDist()
+Field<uint8_t> VLW::getTotalWaterDist()
 {
     return this->twd;
 }
 
-char VLW::getTWDUnit()
+Field<char> VLW::getTWDUnit()
 {
     return this->twdUnit;
 }
 
-uint8_t VLW::getWaterDist()
+Field<uint8_t> VLW::getWaterDist()
 {
     return this->wd;
 }
 
-char VLW::getWDUnit()
+Field<char> VLW::getWDUnit()
 {
     return this->wdUnit;
 }
 
-float_t VLW::getTotalGroundDist()
+Field<float_t> VLW::getTotalGroundDist()
 {
     return this->tgd;
 }
 
-char VLW::getTGDUnit()
+Field<char> VLW::getTGDUnit()
 {
     return this->tgdUnit;
 }
 
-float_t VLW::getGroundDist()
+Field<float_t> VLW::getGroundDist()
 {
     return this->gd;
 }
 
-char VLW::getGDUnit()
+Field<char> VLW::getGDUnit()
 {
     return this->gdUnit;
 }
@@ -1178,47 +1197,47 @@ void VTG::parseNMEA(char ** lineArr, uint16_t length)
     this->posMode = *lineArr[9];
 }
 
-float_t VTG::getTrueCourseOverGround()
+Field<float_t> VTG::getTrueCourseOverGround()
 {
     return this->cogt;
 }
 
-char VTG::getTCOGUnit()
+Field<char> VTG::getTCOGUnit()
 {
     return this->cogtUnit;
 }
 
-float_t VTG::getMagneticCourseOverGround()
+Field<float_t> VTG::getMagneticCourseOverGround()
 {
     return this->cogm;
 }
 
-char VTG::getMCOGUnit()
+Field<char> VTG::getMCOGUnit()
 {
     return this->cogmUnit;
 }
 
-float_t VTG::getSpeedOverGroundKnots()
+Field<float_t> VTG::getSpeedOverGroundKnots()
 {
     return this->sogn;
 }
 
-char VTG::getSOGNUnit()
+Field<char> VTG::getSOGNUnit()
 {
     return this->sognUnit;
 }
 
-float_t VTG::getSpeedOverGroundKms()
+Field<float_t> VTG::getSpeedOverGroundKms()
 {
     return this->sogk;
 }
 
-char VTG::getSOGKUnit()
+Field<char> VTG::getSOGKUnit()
 {
     return this->sogkUnit;
 }
 
-char VTG::getPosMode()
+Field<char> VTG::getPosMode()
 {
     return this->posMode;
 }
@@ -1270,27 +1289,27 @@ void ZDA::parseNMEA(char ** lineArr, uint16_t length)
     this->ltzn = std::stoi(lineArr[6]);
 }
 
-uint8_t ZDA::getDay()
+Field<uint8_t> ZDA::getDay()
 {
     return this->day;
 }
 
-uint8_t ZDA::getMonth()
+Field<uint8_t> ZDA::getMonth()
 {
     return this->month;
 }
 
-uint16_t ZDA::getYear()
+Field<uint16_t> ZDA::getYear()
 {
     return this->year;
 }
 
-uint8_t ZDA::getLocalTimezoneHrs()
+Field<uint8_t> ZDA::getLocalTimezoneHrs()
 {
     return this->ltzh;
 }
 
-uint8_t ZDA::getLocalTimezoneMins()
+Field<uint8_t> ZDA::getLocalTimezoneMins()
 {
     return this->ltzn;
 }
