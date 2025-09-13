@@ -22,6 +22,47 @@ typedef struct
     uint8_t cno;
 } SatData;
 
+
+template <typename T> class Field
+{
+    T value;
+    bool valid;
+
+    public:
+    friend bool operator==(const Field<T>& a, const T& b) { return equals(a, b); }
+    friend bool operator==(const T& a, const Field<T>& b) { return equals(b, a); }
+    friend bool operator!=(const Field<T>& a, const T& b) { return a.value != b; }
+    friend bool operator!=(const T& a, const Field<T>& b) { return a != b.value; }
+    friend bool operator<(const Field<T>& a, const T& b) { return a.value < b; }
+    friend bool operator<(const T& a, const Field<T>& b) { return a < b.value; }
+    friend bool operator>(const Field<T>& a, const T& b) { return a.value > b; }
+    friend bool operator>(const T& a, const Field<T>& b) { return a > b.value; }
+    friend bool operator<=(const Field<T>& a, const T& b) { return a.value <= b; }
+    friend bool operator<=(const T& a, const Field<T>& b) { return a <= b.value; }
+    friend bool operator>=(const Field<T>& a, const T& b) { return a.value >= b; }
+    friend bool operator>=(const T& a, const Field<T>& b) { return a >= b.value; }
+    friend T operator+(const Field<T>& a, const T& b) { return a.value + b; }
+    friend T operator+(const T& a, const Field<T>& b) { return a + b.value; }
+    friend T operator*(const Field<T>& a, const T& b) { return a.value * b; }
+    friend T operator*(const T& a, const Field<T>& b) { return a * b.value; }
+    friend T operator/(const Field<T>& a, const T& b) { return a.value / b; }
+    friend T operator/(const T& a, const Field<T>& b) { return a / b.value; }
+    friend T operator-(const Field<T>& a, const T& b) { return a.value - b; }
+    friend T operator-(const T& a, const Field<T>& b) { return a - b.value; }
+
+    public:
+    Field();
+    Field(const Field<T>& field);
+    Field(T value);
+    Field(T value, bool valid);
+    void setValue(T value, bool valid);
+    const T * const getValue();
+    bool getValid();
+
+    private:
+    static bool equals(const Field<T>& a, const T& b);
+};
+
 class GNSS;
 
 template <typename T> class Sentence
