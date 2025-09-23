@@ -63,7 +63,7 @@ bool Field<T>::getValid()
 template <typename T>
 bool Field<T>::equals(const Field<T>& a, const T& b)
 {
-    return a == b;
+    return a.value == b;
 }
 
 /* Equals implementation for specifically std::string */
