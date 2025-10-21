@@ -136,7 +136,7 @@ std::vector<uint8_t> UBX::getUBX()
     std::vector<uint8_t> payload = this->getPayload();
     
     // Only temporary fixed size:
-    std::vector<uint8_t> message(2 + 4 + 2 + payload.size() + 2, 0);
+    std::vector<uint8_t> message(2 + 4 + payload.size() + 2, 0);
 
     message[0] = 0xb5;
     message[1] = 0x62;
