@@ -11,7 +11,6 @@ extern "C"
 {
 #endif
 
-char * strnstr(char * haystack, const char * needle, size_t length);
 char * strnext(char ** input, const char * delim);
 uint16_t numTokens(const char* string, const char * token);
 char ** splitString(const char * string, const char * delim, uint16_t * arr_size);

@@ -1,42 +1,6 @@
 #include "stringslib.h"
 
 /**
- * Similar to `strstr` - finds a substring (needle) in a given string
- * (haystack) and returns a pointer to the occurrence. This implementation,
- * however, does not stop once a '\0' character is met. This only stops when
- * the given length is reached.
- * 
- * @param haystack The input string to search.
- * @param needle The string to find in the haystack.
- * @param length The maximum length to search for.
- * 
- * @note The function will point past a string if the given length is longer
- * 		 than the length of the haystack.
- * 
- * @note The needle length must be smaller than the haystack length.
- */
-char * strnstr(char * haystack, const char * needle, size_t length)
-{
-	char * foundStr = NULL;
-
-	size_t i = 0;
-
-	size_t needleLength = strlen(needle);
-
-	/* Scan the string for instances of the needle, exiting when found */
-	for (i = 0; i < length - needleLength + 1; i++)
-	{
-		if (strncmp(haystack + i, needle, needleLength) == 0)
-		{
-			foundStr = haystack + i;
-			break;
-		}
-	}
-
-	return foundStr;
-}
-
-/**
  * Similar to `strsep` - updates the input string to point past the
  * delimiter string and sets the delimiter part to \0. Uses the entire
  * delim instead of only one of the characters from it like `strsep`.
