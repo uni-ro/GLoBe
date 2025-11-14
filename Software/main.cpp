@@ -113,19 +113,6 @@ void printArr(uint8_t * arr, uint16_t size)
 
 void printArr_c(uint8_t * arr, uint16_t size)
 {
-//	char * str = (char *) calloc(2*size + 1, sizeof(char));
-//
-//	uint16_t i = 0;
-//	for(i = 0; i < size; i++)
-//	{
-//		sprintf(str + 2*i, "%c", arr[i]);
-//		//printf("%2x", arr[i]);
-//	}
-//
-//	printf("%s", str);
-//
-//	free(str);
-
 	uint16_t i = 0;
 	for (i = 0; i < size; i++)
 	{
@@ -199,8 +186,6 @@ int main(void)
 		  uint16_t length;
 		  char delim[] = "\r\n";
 
-//		  arr = splitString((const char *) MainBuf, delim, &length);
-
 		  arr = (char **) splitBuff((uint8_t *) MainBuf, MAIN_BUFF_SIZE, readIdx, (uint8_t *) delim, strlen(delim), &length);
 
 
@@ -209,12 +194,10 @@ int main(void)
 		  if (arr != NULL)
 		  {
 			  readIdx = (arr[length - 1] - *arr + readIdx) % MAIN_BUFF_SIZE;
-//			  nCharsToRead = (saveIdx + readIdx) % MAIN_BUFF_SIZE;
 			  nCharsToRead = saveIdx > readIdx ? MAIN_BUFF_SIZE + readIdx - saveIdx : readIdx - saveIdx;
 
 			  uint32_t nRead = totalRead;
 
-//			  printf("nCharsToread is: %ld, whereas nRead is: %ld and nCharsPrevRead is: %ld and difference is: %ld\r\n", nCharsToRead, nRead, nCharsPrevRead, nRead - nCharsPrevRead);
 			  if (nRead - nCharsPrevRead >= nCharsToRead)
 			  {
 				  nCharsPrevRead = nRead;
@@ -227,32 +210,10 @@ int main(void)
 
 					  Sentence<POS> sentence(arr[j]);
 					  Sentence<TIME> sentence_time(arr[j]);
-	//				  Sentence<GLL> sentence(arr[j]);
-	//				  Sentence<RMC> sentence(arr[j]);
-
-	//				  if (strncmp(arr[j] + 3, (char *) "GLL", 3) == 0)
-	//				  {
-	//					  printf("\r\nThe sentence is: GLL!!!\r\n %s\r\n", arr[j]);
-	//				  }
-	//				  else
-	//				  {
-	//					  printf("The sentence is not GLL! Instead it is: ");
-	//
-	//					  POS * s = sentence.getSentence();
-	//
-	//					  if (s != NULL)
-	//					  {
-	//						  printf("\tNOT NULL!");
-	//					  }
-	//
-	//					  printf("\r\n");
-	//				  }
-
+	
 					  POS * sent = sentence.getSentence();
 					  TIME * time = sentence_time.getSentence();
-	//				  GLL * sent = sentence.getSentence();
-	//				  RMC * sent = sentence.getSentence();
-
+	
 					  if (sent != NULL) {
 
 						Field<float_t> lat, lon;
@@ -266,20 +227,9 @@ int main(void)
 							flon = *lon.getValue();
 						}
 
-	//					printf("Time: %s has Lat: %f and Lon: %f\tWith speed: %f\r\n", sent->getTime().c_str(), lat, lon, sent->getSpeedOverGround());
-
-	//					printf("Latitude actually is: %f\r\n", flat);
-
+	
 						printf("Latitude is: %f, whilst longitude is: %f\r\n", flat, flon);
-	//					printf("Current datum is: %s\r\n", sent->getDatum().c_str());
-
-	//					  printf("The current text is: %s\r\n", sent->getText().c_str());
-
-					  } else {
-	//					printf("Main buffer is: %s\r\n", MainBuf);
-	//					  HAL_UART_Transmit(&huart2, (const uint8_t *) "Given sentence was not the required type!\r\n", 1, 0xFFFF);
-	//					  std::cout << "Given sentence was not the required type!\r\n";
-	//					  printf("No GLL sentence\r\n");
+	
 					  }
 
 					  if (time != NULL)
@@ -304,15 +254,8 @@ int main(void)
 			  printf("Array is NULL\r\n");
 		  }
 
-
-		  //Timer = HAL_GetTick();
-//	  }
-
 		  uint16_t startIdx_post = saveIdx, nCompletions_post = nCompletions;
 		  uint32_t totalRead_post = totalRead;
-
-//		  printf("The total number of indexes traversed: %d with the number of completions: %d\t", startIdx_post - startIdx_pre, nCompletions_post - nCompletions_pre);
-//		  printf("Total number of characters read: %ld, with total times buffer overflow: %ld\r\n", totalRead_post - totalRead_pre, (totalRead_post - totalRead_pre) / MAIN_BUFF_SIZE);
 
     /* USER CODE END WHILE */
 
@@ -774,47 +717,6 @@ void configureDYNMODEL()
 	{
 		printf("Configuration already set to Airborne with < 4g acceleration!\r\n");
 	}
-
-//	correctConfig = checkConfiguration(CFG::LAYER::FLASH_, CFG::KEYS::, CFG::NAVSPG::AIR4);
-//
-//	if (!correctConfig)
-//	{
-//		printf("Current configuration is not Airborne with < 4g acceleration.\r\n");
-//
-//		std::vector<uint8_t> setter_vec;
-//
-//		printf("Setting configuration to Airborne with < 4g acceleration... ");
-//
-//		// Set time precision in flash
-//		CFG_VALSET setter_flash(CFG::LAYER::FLASH_, {{CFG::KEYS::NAVSPG_DYNMODEL, CFG::NAVSPG::DYNMODEL::AIR4}});
-//
-//		bool correctFlash = setConfiguration(setter_flash);
-//
-//		if (correctFlash)
-//			printf("Flash config set. ");
-//		else
-//			printf("Flash config setting unsuccessful. ");
-//
-//		// Set time precision in ram
-//		CFG_VALSET setter_ram(CFG::LAYER::RAM, {{CFG::KEYS::NAVSPG_DYNMODEL, CFG::NAVSPG::DYNMODEL::AIR4}});
-//
-//		bool correctRAM = setConfiguration(setter_ram);
-//
-//		if (correctRAM)
-//			printf("RAM config set. ");
-//		else
-//			printf("RAM config setting unsuccessful. ");
-//
-//
-//		if (correctFlash && correctRAM)
-//			printf("Configuration successfully set!\r\n");
-//		else
-//			printf("Configuration could not be set!\r\n");
-//	}
-//	else
-//	{
-//		printf("Configuration already set to Airborne with < 4g acceleration!\r\n");
-//	}
 }
 
 /* USER CODE END 4 */
