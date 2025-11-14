@@ -1,31 +1,55 @@
+/**
+ * FILE: sentences.hpp
+ * PURPOSE: The header file to declare all of the sentence structures for NMEA communication.
+ * 
+ * UPDATED: 13 Nov. 2025
+ * 
+ * NOTE: The NMEA sentences were implemented based on the definitions found in the interface description
+ *       for the u-blox NeoM9N GNSS module. A link to this interface description can be found below.
+ * 
+ * REFERENCE: https://content.u-blox.com/sites/default/files/u-blox-M9-SPG-4.04_InterfaceDescription_UBX-21022436.pdf
+ */
+
 #ifndef INC_SENTENCES_HPP_
 #define INC_SENTENCES_HPP_
+
+#include <regex>
+#include <string>
+#include <vector>
+#include <ctime>
+#include <compare>
 
 #include <stdint.h>
 #include <math.h>
 #include <string.h>
-#include <regex>
-#include <string>
-#include <vector>
+
 #include "stringslib.h"
-#include <ctime>
+#include "stringslib.hpp"
 #include "gnss.h"
-#include <compare>
 #include "data_validation.hpp"
 
-/**
- * The struct to represent satellite data for getting satellites in view
- */
-typedef struct
+extern "C"
 {
-    uint8_t svid;
-    uint8_t elv; /* Double check - may be float? */
-    uint16_t az; /* Double check - may be float? */
-    uint8_t cno;
-} SatData;
+    /**
+     * A (C-style) struct to represent satellite data for retrieving the satellites in view.
+     * The C-type nature of the struct is to ensure efficient memory management as a full C++
+     * struct is not needed.
+     */
+    typedef struct
+    {
+        uint8_t svid;   // Satellite ID
+        uint8_t elv;    // Elevation
+        uint16_t az;    // Azimuth
+        uint8_t cno;    // Signal Strength
+    } SatData;
+}
 
-class GNSS;
-
+/**
+ * The template class to create and retrieve NMEA sentences from a given string. If the sentence in the
+ * given string is of the same class as the provided template class then the sentence created is valid.
+ * If the provided string is not the same as the provided template class, then the sentence is invalid
+ * and the internal sentence value is `NULL`.
+ */
 template <typename T> class Sentence
 {
     public:
@@ -34,11 +58,14 @@ template <typename T> class Sentence
 
     private:
     T * sentence = NULL;
+
+    inline void assertCorrectType();
+    bool isAcceptedSubtype(char * header);
     
     /* -------------- Static Functions -------------- */
     private:
     static int8_t verifyFormat(const char * data);
-    template <typename U> static bool isAcceptedSubtype(char * header);
+    static T * getFromHeader(const char * const header, char ** lineArr, uint16_t length);
 
     public:
     static int8_t nmeaChecksum(const char * data);
@@ -49,7 +76,8 @@ template <typename T> class Sentence
 };
 
 /**
- * The base data class for all sentences
+ * The base data class for all sentences. This contains the header, the constellation and the checksum
+ * of the sentence. All of the valid NMEA sentences contain this info.
  */
 class BASE
 {
@@ -73,10 +101,27 @@ class BASE
 };
 
 /**
+ * A base class for all of the sentence group types. This allows for easy identification of a `GROUP`
+ * sub-class and, hence, the proper processing required for a `GROUP` child class.
+ * 
+ * @note All NMEA group sentences MUST inherit from this class to be appropriately considered as `GROUP`
+ */
+class GROUP
+{
+    
+};
+
+/**
  * The base for polling a standard message
  */
-class STD_MSG_POLL
+class STD_MSG_POLL : public GROUP
 {
+    public:
+    STD_MSG_POLL(STD_MSG_POLL& msg);
+
+    protected:
+    STD_MSG_POLL();
+
     public:
     static const std::vector<std::string> acceptedTypes;
 
@@ -85,14 +130,22 @@ class STD_MSG_POLL
 };
 
 /**
- * A message that contains position data (not including altitude)
+ * A group that contains position data (not including altitude). The longitude and latitude is 
+ * stored in degrees and minutes and are converted to decimal degrees when retrieving the latitude
+ * and longitude values using the appropriate getters.
  */
-class POS
+class POS : public GROUP
 {
     public:
+    POS(POS& pos);
+
+    protected:
+    POS();
+
+    public:
     static const std::vector<std::string> acceptedTypes;
-    const Field<float_t> getLatitude();
-    const Field<float_t> getLongitude();
+    Field<float_t> getLatitude();
+    Field<float_t> getLongitude();
     POS * const getPosition();
 
     static float_t degMin2DecDeg(float_t coords);
@@ -108,22 +161,79 @@ class POS
 };
 
 /**
- * A message that contains time data
+ * A group that contains only altitude information.
  */
-class TIME
+class ALTITUDE : public GROUP
 {
     public:
+    ALTITUDE(ALTITUDE& alt);
+
+    protected:
+    ALTITUDE();
+
+    public:
     static const std::vector<std::string> acceptedTypes;
-    const Field<std::string> getTime();
+    Field<float_t> getAltitude();
+
+    protected:
+    Field<float_t> alt;
+
+    bool checkValidity();
+    void parseNMEA(char * alt);
+};
+
+/**
+ * A group that contains longitude, latitude and altitude information. Similar to the `POS` group, the
+ * longitude and latitude values are stored as degrees and minutes and only converted to decimal
+ * degrees when queried using the appropriate getters.
+ */
+class POS3D : public POS, public ALTITUDE
+{
+    public:
+    POS3D(POS3D& pos);
+
+    protected:
+    POS3D();
+
+    public:
+    static const std::vector<std::string> acceptedTypes;
+    POS3D * const get3DPosition();
+
+    protected:
+    bool checkValidity();
+    void parseNMEA(char * lat, char * NS, char * lon, char * EW, char * alt);
+};
+
+/**
+ * A group that contains only time data. The time data is stored as a string in the following format:
+ *      "HHMMSS.SS", where
+ *          HH -> The current hour
+ *          MM -> The current minute
+ *          SS.SS -> The current seconds
+ */
+class TIME : public GROUP
+{
+    public:
+    TIME(TIME& time);
+
+    protected:
+    TIME();
+
+    public:
+    static const std::vector<std::string> acceptedTypes;
+    Field<std::string> getTime();
 
     protected:
     Field<std::string> time{"000000.00"};
+
+    bool checkTimeFormat(char * time);
+    void parseNMEA(char * time);
 };
 
 /**
  * The class for the Datum reference sentence
  */
-class DTM : public BASE, public POS
+class DTM : public BASE, public POS3D
 {
     public:
     static const std::vector<std::string> acceptedTypes;
@@ -131,13 +241,11 @@ class DTM : public BASE, public POS
 
     Field<std::string> getDatum();
     Field<std::string> getSubDatum();
-    Field<float_t> getAltitude();
     Field<std::string> getReferenceDatum();
 
     private:
     Field<std::string> datum;
     Field<std::string> subDatum;
-    Field<float_t> alt;
     Field<std::string> refDatum;
 
     protected:
@@ -148,6 +256,8 @@ class DTM : public BASE, public POS
 
 /**
  * The class for polling a standard message (Talker ID: GA)
+ * 
+ * @note Currently not implemented as it is not required.
  */
 class GAQ : public BASE, public STD_MSG_POLL
 {
@@ -160,6 +270,8 @@ class GAQ : public BASE, public STD_MSG_POLL
 
 /**
  * The class for polling a standard message (Talker ID: GB)
+ * 
+ * @note Currently not implemented as it is not required.
  */
 class GBQ : public BASE, public STD_MSG_POLL
 {
@@ -209,7 +321,7 @@ class GBS : public BASE, public TIME
 /**
  * The class for global positioning system fix data
  */
-class GGA : public BASE, public POS, public TIME
+class GGA : public BASE, public POS3D, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
@@ -217,7 +329,6 @@ class GGA : public BASE, public POS, public TIME
     Field<uint8_t> getQuality();
     Field<uint8_t> getNumSatellites();
     Field<float_t> getHDOP();
-    Field<float_t> getAltitude();
     Field<char> getAltitudeUnit();
     Field<float_t> getGEOIDSep();
     Field<char> getGEOIDSepUnit();
@@ -228,7 +339,6 @@ class GGA : public BASE, public POS, public TIME
     Field<uint8_t> quality;
     Field<uint8_t> numSV;
     Field<float_t> HDOP;
-    Field<float_t> alt;
     Field<char> altUnit;
     Field<float_t> sep;
     Field<char> sepUnit;
@@ -249,8 +359,8 @@ class GLL : public BASE, public POS, public TIME
     public:
     static const std::vector<std::string> acceptedTypes;
     GLL(char ** lineArr, uint16_t length);
-    const Field<char> getStatus();
-    const Field<char> getPosMode();
+    Field<char> getStatus();
+    Field<char> getPosMode();
 
     private:
     Field<char> status;
@@ -264,6 +374,8 @@ class GLL : public BASE, public POS, public TIME
 
 /**
  * The class for polling a standard message (Talker ID: GL)
+ * 
+ * @note Currently not implemented as it is not required
  */
 class GLQ : public BASE, public STD_MSG_POLL
 {
@@ -276,6 +388,8 @@ class GLQ : public BASE, public STD_MSG_POLL
 
 /**
  * The class for polling a standard message (Talker ID: GN)
+ * 
+ * @note Currently not implemented as it is not required
  */
 class GNQ : public BASE, public STD_MSG_POLL
 {
@@ -289,7 +403,7 @@ class GNQ : public BASE, public STD_MSG_POLL
 /**
  * The class for getting GNSS fix data
  */
-class GNS : public BASE, public POS, public TIME
+class GNS : public BASE, public POS3D, public TIME
 {
     public:
     static const std::vector<std::string> acceptedTypes;
@@ -297,7 +411,6 @@ class GNS : public BASE, public POS, public TIME
     Field<std::string> getPosMode();
     Field<uint8_t> getNumSV();
     Field<float_t> getHDOP();
-    Field<float_t> getAltitude();
     Field<float_t> getGEOIDSep();
     Field<uint16_t> getDiffAge();
     Field<uint16_t> getDiffStationID();
@@ -307,7 +420,6 @@ class GNS : public BASE, public POS, public TIME
     Field<std::string> posMode;
     Field<uint8_t> numSV;
     Field<float_t> HDOP;
-    Field<float_t> alt;
     Field<float_t> sep;
     Field<uint16_t> diffAge;
     Field<uint16_t> diffStation;
@@ -321,6 +433,8 @@ class GNS : public BASE, public POS, public TIME
 
 /**
  * The class for polling a standard message (Talker ID: GP)
+ * 
+ * @note Currently not implemented as it is not required
  */
 class GPQ : public BASE, public STD_MSG_POLL
 {
@@ -348,7 +462,7 @@ class GRS : public BASE, public TIME
     Field<uint8_t> mode;
     Field<float_t> residual[12];
     Field<uint8_t> systemId;
-    Field<uint8_t> singalId;
+    Field<uint8_t> signalId;
 
     protected:
     bool checkValidity() override;
@@ -357,7 +471,7 @@ class GRS : public BASE, public TIME
 };
 
 /**
- * The class for getting GNSS DOP and active satellites
+ * The class for getting GNSS DOP (Dilution of Precision) and active satellites
  */
 class GSA : public BASE
 {
@@ -376,9 +490,9 @@ class GSA : public BASE
     Field<char> opMode;
     Field<uint8_t> navMode;
     Field<uint8_t> svid[12];
-    Field<float_t> PDOP;
-    Field<float_t> HDOP;
-    Field<float_t> VDOP;
+    Field<float_t> PDOP;    // Position Dilution of Precision
+    Field<float_t> HDOP;    // Horizontal Dilution of Precision
+    Field<float_t> VDOP;    // Vertical Dilution of Precision
     Field<uint8_t> systemId;
 
     protected:
@@ -464,7 +578,7 @@ class RLM : public BASE, public TIME
     private:
     Field<uint64_t> beacon;
     Field<char> code;
-    Field<uint64_t> body; /* Check that the value cannot exceed 64bit */
+    Field<uint64_t> body; /* This assumes that the value cannot exceed 64bit - this may need to be verified */
 
     protected:
     bool checkValidity() override;
@@ -587,9 +701,9 @@ class VTG : public BASE
     Field<float_t> cogm;
     Field<char> cogmUnit; /* Fixed field: M */
     Field<float_t> sogn;
-    Field<char> sognUnit;
+    Field<char> sognUnit; /* Fixed field: N */
     Field<float_t> sogk;
-    Field<char> sogkUnit; /* Fixed field: N */
+    Field<char> sogkUnit; /* Fixed field: K */
     Field<char> posMode;
 
     protected:

@@ -16,6 +16,11 @@
 #include "string.h"
 #include "stringslib.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef enum {INVALID, NONE, GPS, GLONASS, GALILEO, BEIDOU} Constellation;
 typedef enum {INV, DTM, GAQ, GBQ, GBS, GGA, GLL, GLQ, GNQ, GNS, GPQ, GRS, GSA, GST, GSV, RLM, RMC, TXT, VLW, VTG, ZDA} Sentences;
 
@@ -65,4 +70,9 @@ int8_t nmeaChecksum(const char *data);
 int8_t verifyFormat(const char *data);
 
 Constellation convertConstellation(const char *header);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* INC_GNSS_H_ */

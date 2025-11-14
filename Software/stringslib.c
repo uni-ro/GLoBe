@@ -103,6 +103,12 @@ uint16_t numTokens(const char *string, const char * token)
  */
 char ** splitString(const char * string, const char * delim, uint16_t * arr_size)
 {
+	/* NOTE: Currently the function will output an extra empty array value if the string begins with
+	* 		  the delimiter. This should be changed, however, in its current form, the start of the input 
+	* 		  string must be the first element of the returned string array, otherwise freeing issues might
+	* 		  occur as the calloc'd input array will no longer be freed by free(*strings).
+	*/
+
 	uint16_t nParts = numTokens(string, delim) + 1; /* For n splits, there are n+1 sections */
 
 	/* Create copy of input string for strsep to use */

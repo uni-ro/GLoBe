@@ -5,7 +5,9 @@ const std::vector<std::string> BASE::acceptedTypes = {
     "GRS", "GSA", "GST", "GSV", "RLM", "RMC", "TXT", "VLW", "VTG", "ZDA"
 };
 const std::vector<std::string> STD_MSG_POLL::acceptedTypes = {"GAQ", "GBQ", "GLQ", "GNQ", "GPQ"};
-const std::vector<std::string> POS::acceptedTypes = {"DTM", "GGA", "GLL", "GNS", "GPQ", "RMC"};
+const std::vector<std::string> POS::acceptedTypes = {"DTM", "GGA", "GLL", "GNS", "RMC"};
+const std::vector<std::string> ALTITUDE::acceptedTypes = {"DTM", "GGA", "GNS"};
+const std::vector<std::string> POS3D::acceptedTypes = {"DTM", "GGA", "GNS"};
 const std::vector<std::string> TIME::acceptedTypes = {"GBS", "GGA", "GLL", "GNS", "GRS", "GST", "RLM", "RMC", "ZDA"};
 const std::vector<std::string> DTM::acceptedTypes = {"DTM"};
 const std::vector<std::string> GAQ::acceptedTypes = {"GAQ"};
@@ -28,12 +30,6 @@ const std::vector<std::string> VLW::acceptedTypes = {"VLW"};
 const std::vector<std::string> VTG::acceptedTypes = {"VTG"};
 const std::vector<std::string> ZDA::acceptedTypes = {"ZDA"};
 
-class GNSS
-{
-    Sentence<void> * sentences;
-};
-
-
 /* -------------------------- BASE Definitions -------------------------- */
 
 BASE::BASE(char ** lineArr, uint16_t length)
@@ -41,6 +37,15 @@ BASE::BASE(char ** lineArr, uint16_t length)
 
 }
 
+/**
+ * Initialises the sentence data using the specific override functions implemented by the individual
+ * sentence classes.
+ * 
+ * @param lineArr The array of the string sentence split at each ',' character.
+ * @param length The length of the lineArr.
+ * 
+ * @returns `true` if the object has been successfully initialised, `false` otherwise.
+ */
 bool BASE::initialise(char ** lineArr, uint16_t length)
 {
     /* 
@@ -58,7 +63,13 @@ bool BASE::initialise(char ** lineArr, uint16_t length)
     }
 }
 
-/* Ensure that the provided sentence within the required size. */
+/**
+ * Ensure that the provided sentence is within the required size.
+ * 
+ * @param nFields The number of fields that the sentence currently has.
+ * 
+ * @returns `true` if the number of fields is in the required bounds and `false` otherwise.
+ */
 bool BASE::verifyBounds(uint16_t nFields)
 {
     std::invalid_argument err("The given sentence length is not within the acceptable bounds.");
@@ -82,13 +93,19 @@ bool BASE::checkValidity()
     return this->constellation != INVALID;
 }
 
+/**
+ * Reads the NMEA data and assigns the respective array data to the class fields.
+ */
 void BASE::parseNMEA(char ** lineArr, uint16_t length)
 {
     this->header = std::string(lineArr[0]);
     this->constellation = convertConstellation(lineArr[0]);
     this->checksum = strtol(strchr(lineArr[length-1], '*') + 1, NULL, 16);
 }
-    
+
+/**
+ * Returns the acceptable size of the array.
+ */
 void BASE::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
 {
     *minLength = 2;
@@ -108,14 +125,31 @@ BASE::~BASE()
 /* ------------------------ END BASE Definitions ------------------------ */
 
 
+/* ------------------------- GROUP Definitions -------------------------- */
+/* ----------------------- END GROUP Definitions ------------------------ */
+
+
 /* -------------------------- POS Definitions --------------------------- */
+
+POS::POS(POS& pos)
+{
+    this->lat = pos.lat;
+    this->NS = pos.NS;
+    this->lon = pos.lon;
+    this->EW = pos.EW;
+}
+
+POS::POS()
+{
+    
+}
 
 bool POS::checkValidity()
 {
     bool valid = true;
 
     if (this->NS != 'N' && this->NS != 'S')
-            valid = false;
+        valid = false;
         
     if (this->EW != 'E' && this->EW != 'W')
         valid = false;
@@ -125,14 +159,16 @@ bool POS::checkValidity()
 
 void POS::parseNMEA(char * lat, char * NS, char * lon, char * EW)
 {
-    this->lat = degMin2DecDeg(std::stof(lat));
-    this->NS = *NS;
-    this->lon = degMin2DecDeg(std::stof(lon));
-    this->EW = *EW;
+    strtofloat(lat, this->lat);
+    this->lat.apply(degMin2DecDeg);
+    this->NS.setValue(*NS, *NS == 'N' || *NS == 'S');
+    strtofloat(lon, this->lon);
+    this->lon.apply(degMin2DecDeg);
+    this->EW.setValue(*EW, *EW == 'E' || *EW == 'W');
 }
 
 /* Returns the latitude (positive if north, negative if south) */
-const Field<float_t> POS::getLatitude()
+Field<float_t> POS::getLatitude()
 {
     Field<float_t> lat(this->lat);
 
@@ -145,7 +181,7 @@ const Field<float_t> POS::getLatitude()
 }
 
 /* Returns the longitude (positive if east, negative is west) */
-const Field<float_t> POS::getLongitude()
+Field<float_t> POS::getLongitude()
 {
     Field<float_t> lon(this->lon);
 
@@ -191,13 +227,134 @@ float_t POS::degMin2DecDeg(float_t coords)
 /* ------------------------- END POS Definitions ------------------------ */
 
 
+/* ------------------------ ALTITUDE Definitions ------------------------ */
+
+ALTITUDE::ALTITUDE(ALTITUDE& alt)
+{
+    this->alt = alt.alt;
+}
+
+ALTITUDE::ALTITUDE()
+{
+
+}
+
+Field<float_t> ALTITUDE::getAltitude()
+{
+    return this->alt;
+}
+
+bool ALTITUDE::checkValidity()
+{
+    return true;
+}
+
+void ALTITUDE::parseNMEA(char * alt)
+{
+    strtofloat(alt, this->alt);
+}
+
+/* ---------------------- END ALTITUDE Definitions ---------------------- */
+
+
+/* ------------------------- POS3D Definitions -------------------------- */
+
+POS3D::POS3D(POS3D& pos) : POS(pos), ALTITUDE(pos)
+{
+
+}
+
+POS3D::POS3D() : POS(), ALTITUDE()
+{
+
+}
+
+POS3D * const POS3D::get3DPosition()
+{
+    return (POS3D *) this;
+}
+
+bool POS3D::checkValidity()
+{
+    bool valid = true;
+
+    valid &= POS::checkValidity();
+    valid &= ALTITUDE::checkValidity();
+
+    return valid;
+}
+
+void POS3D::parseNMEA(char * lat, char * NS, char * lon, char * EW, char * alt)
+{
+    POS::parseNMEA(lat, NS, lon, EW);
+    ALTITUDE::parseNMEA(alt);
+}
+
+/* ----------------------- END POS3D Definitions ------------------------ */
+
+
 /* -------------------------- TIME Definitions -------------------------- */
 
-const Field<std::string> TIME::getTime()
+TIME::TIME(TIME& time)
+{
+    this->time = time.time;
+}
+
+TIME::TIME()
+{
+
+}
+
+Field<std::string> TIME::getTime()
 {
     return this->time;
 }
-    
+
+bool TIME::checkTimeFormat(char * time)
+{
+    if (strlen(time) != 9)
+    {
+        return false;
+    }
+
+    if (time[6] != '.')
+    {
+        return false;
+    }
+
+    if (!isdigit(time[0]) || !isdigit(time[1]))
+    {
+        return false;
+    }
+
+    if (!isdigit(time[7]) || !isdigit(time[8]))
+    {
+        return false;
+    }
+
+    if (!isdigit(time[3]) || !isdigit(time[5]))
+    {
+        return false;
+    }
+
+    if (time[2] < '1' || time[2] > '5')
+    {
+        return false;
+    }
+
+    if (time[4] < '1' || time[4] > '5')
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void TIME::parseNMEA(char * time)
+{
+    this->time.setValue(std::string(time), this->checkTimeFormat(time));
+}   
+
 /* ------------------------ END TIME Definitions ------------------------ */
 
 
@@ -211,7 +368,7 @@ DTM::DTM(char ** lineArr, uint16_t length) : BASE(lineArr, length)
 bool DTM::checkValidity()
 {
     bool valid = BASE::checkValidity();
-    valid = valid && POS::checkValidity();
+    valid = valid && POS3D::checkValidity();
 
     if (this->refDatum == "W84")
         valid = false;
@@ -222,12 +379,11 @@ bool DTM::checkValidity()
 void DTM::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
-    POS::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5]);
+    POS3D::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5], lineArr[6]);
 
-    this->datum = std::string(lineArr[0]);
-    this->subDatum = std::string(lineArr[1]);
-    this->alt = std::stof(lineArr[6], NULL);
-    this->refDatum = std::string(lineArr[7]);
+    this->datum.setValue(std::string(lineArr[0]), true);
+    this->subDatum.setValue(std::string(lineArr[1]), true);
+    this->refDatum.setValue(std::string(lineArr[7]), true);
 }
 
 Field<std::string> DTM::getDatum()
@@ -238,11 +394,6 @@ Field<std::string> DTM::getDatum()
 Field<std::string> DTM::getSubDatum()
 {
     return this->subDatum;
-}
-
-Field<float_t> DTM::getAltitude()
-{
-    return this->alt;
 }
 
 Field<std::string> DTM::getReferenceDatum()
@@ -276,17 +427,17 @@ bool GBS::checkValidity()
 void GBS::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
+    TIME::parseNMEA(lineArr[1]);
 
-    this->time = std::string(lineArr[1]);
-    this->errLat = std::stof(lineArr[2]);
-    this->errLon = std::stof(lineArr[3]);
-    this->errAlt = std::stof(lineArr[4]);
-    this->svid = std::stoi(lineArr[5]);
-    this->prob = 255; /* Unsupported value (it is always fixed) */
-    this->bias = std::stof(lineArr[7]);
-    this->stddev = std::stof(lineArr[8]);
-    this->systemId = std::stoi(lineArr[9]);
-    this->signalId = std::stoi(lineArr[10]);
+    strtofloat(lineArr[2], this->errLat);
+    strtofloat(lineArr[3], this->errLon);
+    strtofloat(lineArr[4], this->errAlt);
+    strtouint8(lineArr[5], this->svid);
+    this->prob.setValue(255, false); /* Unsupported value (it is always fixed) */
+    strtofloat(lineArr[7], this->bias);
+    strtofloat(lineArr[8], this->stddev);
+    strtouint8(lineArr[9], this->systemId);
+    strtouint8(lineArr[10], this->signalId);
 }
 
 Field<float_t> GBS::getErrLat()
@@ -353,7 +504,7 @@ GGA::GGA(char ** lineArr, uint16_t length) : BASE(lineArr, length)
 bool GGA::checkValidity()
 {
     bool valid = BASE::checkValidity();
-    valid = valid && POS::checkValidity();
+    valid = valid && POS3D::checkValidity();
     
     if (this->quality == 0)
         valid = false;
@@ -370,18 +521,17 @@ bool GGA::checkValidity()
 void GGA::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
-    POS::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5]);
+    TIME::parseNMEA(lineArr[1]);
+    POS3D::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5], lineArr[9]);
 
-    this->time = std::string(lineArr[1]);
-    this->quality = std::stoi(lineArr[6]);
-    this->numSV = std::stoi(lineArr[7]);
-    this->HDOP = std::stof(lineArr[8]);
-    this->alt = std::stof(lineArr[9]);
-    this->altUnit = *lineArr[10];
-    this->sep = std::stof(lineArr[11]);
-    this->sepUnit = *lineArr[12];
-    this->diffAge = std::stoi(lineArr[13]);
-    this->diffStation = std::stoi(lineArr[14]);
+    strtouint8(lineArr[6], this->quality);
+    strtouint8(lineArr[7], this->numSV);
+    strtofloat(lineArr[8], this->HDOP);
+    this->altUnit.setValue(*lineArr[10], *lineArr[10] == 'M');
+    strtofloat(lineArr[11], this->sep);
+    this->sepUnit.setValue(*lineArr[12], *lineArr[12] == 'M');
+    strtouint16(lineArr[13], this->diffAge);
+    strtouint16(lineArr[14], this->diffStation);
 }
 
 Field<uint8_t> GGA::getQuality()
@@ -397,11 +547,6 @@ Field<uint8_t> GGA::getNumSatellites()
 Field<float_t> GGA::getHDOP()
 {
     return this->HDOP;
-}
-
-Field<float_t> GGA::getAltitude()
-{
-    return this->alt;
 }
 
 Field<char> GGA::getAltitudeUnit()
@@ -460,18 +605,18 @@ void GLL::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
     POS::parseNMEA(lineArr[1], lineArr[2], lineArr[3], lineArr[4]);
+    TIME::parseNMEA(lineArr[5]);
 
-    this->time = std::string(lineArr[5]);
-    this->status = *lineArr[6];
-    this->posMode = *lineArr[7];
+    this->status.setValue(*lineArr[6], true);
+    this->posMode.setValue(*lineArr[7], true);
 }
 
-const Field<char> GLL::getStatus()
+Field<char> GLL::getStatus()
 {
     return this->status;
 }
 
-const Field<char> GLL::getPosMode()
+Field<char> GLL::getPosMode()
 {
     return this->posMode;
 }
@@ -495,7 +640,7 @@ GNS::GNS(char ** lineArr, uint16_t length) : BASE(lineArr, length)
 bool GNS::checkValidity()
 {
     bool valid = BASE::checkValidity();
-    valid = valid && POS::checkValidity();
+    valid = valid && POS3D::checkValidity();
     
     if (this->navStatus != 'V') /* Fixed field as hardware is not providing nav status info */
         valid = false;
@@ -506,17 +651,16 @@ bool GNS::checkValidity()
 void GNS::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
-    POS::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5]);
+    TIME::parseNMEA(lineArr[1]);
+    POS3D::parseNMEA(lineArr[2], lineArr[3], lineArr[4], lineArr[5], lineArr[9]);
 
-    this->time = std::string(lineArr[1]);
-    this->posMode = std::string(lineArr[6]);
-    this->numSV = std::stoi(lineArr[7]);
-    this->HDOP = std::stof(lineArr[8]);
-    this->alt = std::stof(lineArr[9]);
-    this->sep = std::stof(lineArr[10]);
-    this->diffAge = std::stoi(lineArr[11]);
-    this->diffStation = std::stoi(lineArr[12]);
-    this->navStatus = *lineArr[13];
+    this->posMode.setValue(std::string(lineArr[6]), true);
+    strtouint8(lineArr[7], this->numSV);
+    strtofloat(lineArr[8], this->HDOP);
+    strtofloat(lineArr[10], this->sep);
+    strtouint16(lineArr[11], this->diffAge);
+    strtouint16(lineArr[12], this->diffStation);
+    this->navStatus.setValue(*lineArr[13], true);
 }
 
 Field<std::string> GNS::getPosMode()
@@ -532,11 +676,6 @@ Field<uint8_t> GNS::getNumSV()
 Field<float_t> GNS::getHDOP()
 {
     return this->HDOP;
-}
-
-Field<float_t> GNS::getAltitude()
-{
-    return this->alt;
 }
 
 Field<float_t> GNS::getGEOIDSep()
@@ -587,17 +726,17 @@ void GRS::parseNMEA(char ** lineArr, uint16_t length)
     uint8_t i;
 
     BASE::parseNMEA(lineArr, length);
+    TIME::parseNMEA(lineArr[1]);
 
-    this->time = std::string(lineArr[1]);
-    this->mode = std::stoi(lineArr[2]);
+    strtouint8(lineArr[2], this->mode);
     
     for (i = 0; i < 12; i++)
     {
-        this->residual[i] = std::stof(lineArr[3 + i]);
+        strtofloat(lineArr[3 + i], this->residual[i]);
     }
 
-    this->systemId = std::stoi(lineArr[15]);
-    this->singalId = std::stoi(lineArr[16]);
+    strtouint8(lineArr[15], this->systemId);
+    strtouint8(lineArr[16], this->signalId);
 }
 
 Field<uint8_t> GRS::getComputationMethod()
@@ -617,7 +756,7 @@ Field<uint8_t> GRS::getSystemId()
 
 Field<uint8_t> GRS::getSingalId()
 {
-    return this->singalId;
+    return this->signalId;
 }
 
 void GRS::getSentenceBounds(uint8_t * minLength, uint8_t * maxLength)
@@ -652,18 +791,18 @@ void GSA::parseNMEA(char ** lineArr, uint16_t length)
 
     BASE::parseNMEA(lineArr, length);
 
-    this->opMode = *lineArr[1];
-    this->navMode = std::stoi(lineArr[2]);
+    this->opMode.setValue(*lineArr[1], true);
+    strtouint8(lineArr[2], this->navMode);
 
     for (i = 0; i < 12; i++)
     {
-        this->svid[i] = std::stoi(lineArr[3 + i]);
+        strtouint8(lineArr[3 + i], this->svid[i]);
     }
 
-    this->PDOP = std::stof(lineArr[15]);
-    this->HDOP = std::stof(lineArr[16]);
-    this->VDOP = std::stof(lineArr[17]);
-    this->systemId = std::stoi(lineArr[18]);
+    strtofloat(lineArr[15], this->PDOP);
+    strtofloat(lineArr[16], this->HDOP);
+    strtofloat(lineArr[17], this->VDOP);
+    strtouint8(lineArr[18], this->systemId);
 }
 
 Field<char> GSA::getOpMode()
@@ -727,15 +866,15 @@ bool GST::checkValidity()
 void GST::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
+    TIME::parseNMEA(lineArr[1]);
 
-    this->time = std::string(lineArr[1]);
-    this->rangeRms = std::stof(lineArr[2]);
-    this->stdMajor = std::stof(lineArr[3]);
-    this->stdMinor = std::stof(lineArr[4]);
-    this->orient = std::stof(lineArr[5]);
-    this->stdLat = std::stof(lineArr[6]);
-    this->stdLong = std::stof(lineArr[7]);
-    this->stdAlt = std::stof(lineArr[8]);
+    strtofloat(lineArr[2], this->rangeRms);
+    strtofloat(lineArr[3], this->stdMajor);
+    strtofloat(lineArr[4], this->stdMinor);
+    strtofloat(lineArr[5], this->orient);
+    strtofloat(lineArr[6], this->stdLat);
+    strtofloat(lineArr[7], this->stdLong);
+    strtofloat(lineArr[8], this->stdAlt);
 }
 
 Field<float_t> GST::getRangeRMS()
@@ -802,9 +941,9 @@ void GSV::parseNMEA(char ** lineArr, uint16_t length)
 
     BASE::parseNMEA(lineArr, length);
 
-    this->numMsg = std::stoi(lineArr[1]);
-    this->msgNum = std::stoi(lineArr[2]);
-    this->numSV = std::stoi(lineArr[3]);
+    strtouint8(lineArr[1], this->numMsg);
+    strtouint8(lineArr[2], this->msgNum);
+    strtouint8(lineArr[3], this->numSV);
 
     /* Number of repeated groups = (total length - fixed length) / fields in group */
     nGroups = (length - 6) / 4;
@@ -816,16 +955,25 @@ void GSV::parseNMEA(char ** lineArr, uint16_t length)
 
     for (i = 0; i < nGroups; i++)
     {
-        
-        tempData.svid = std::stoi(lineArr[4 + 4*i]);
-        tempData.elv = std::stoi(lineArr[5 + 4*i]);
-        tempData.az = std::stoi(lineArr[6 + 4*i]);
-        tempData.cno = std::stoi(lineArr[7 + 4*i]);
+        bool valid = true;
+        char * endPtr;
 
-        this->satellites[0].setValue(tempData, true);
+        tempData.svid = strtoul(lineArr[4 + 4*i], &endPtr, 10);
+        valid &= *endPtr == '\0';   // Ensure that the entire integer was consumed
+
+        tempData.elv = strtoul(lineArr[5 + 4*i], &endPtr, 10);
+        valid &= *endPtr == '\0';   // Ensure that the entire integer was consumed
+
+        tempData.az = strtoul(lineArr[6 + 4*i], &endPtr, 10);
+        valid &= *endPtr == '\0';   // Ensure that the entire integer was consumed
+
+        tempData.cno = strtoul(lineArr[7 + 4*i], &endPtr, 10);
+        valid &= *endPtr == '\0';   // Ensure that the entire integer was consumed
+
+        this->satellites[0].setValue(tempData, valid);
     }
 
-    this->signalId = std::stoi(lineArr[4 + 4*nGroups]);
+    strtouint8(lineArr[4 + 4*nGroups], this->signalId);
 }
 
 Field<uint8_t> GSV::getNumMessages()
@@ -891,11 +1039,11 @@ bool RLM::checkValidity()
 void RLM::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
+    TIME::parseNMEA(lineArr[2]);
 
-    this->beacon = std::stoi(lineArr[1], NULL, 16);
-    this->time = std::string(lineArr[2]);
-    this->code = *lineArr[3];
-    this->body = std::stoi(lineArr[4], NULL, 16);
+    strtouint64(lineArr[1], this->beacon, 16);
+    this->code.setValue(*lineArr[3], true);
+    strtouint64(lineArr[1], this->beacon, 16);
 }
 
 Field<uint64_t> RLM::getBeacon()
@@ -949,17 +1097,17 @@ bool RMC::checkValidity()
 void RMC::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
+    TIME::parseNMEA(lineArr[1]);
     POS::parseNMEA(lineArr[3], lineArr[4], lineArr[5], lineArr[6]);
 
-    this->time = std::string(lineArr[1]);
-    this->status = *lineArr[2];
-    this->spd = std::stof(lineArr[7]);
-    this->cog = std::stof(lineArr[8]);
-    this->date = std::string(lineArr[9]);
-    this->mv = std::stof(lineArr[10]);
-    this->mvEW = *lineArr[11];
-    this->posMode = *lineArr[12];
-    this->navStatus = *lineArr[13];
+    this->status.setValue(*lineArr[2], true);
+    strtofloat(lineArr[7], this->spd);
+    strtofloat(lineArr[8], this->cog);
+    this->date.setValue(std::string(lineArr[9]), true);
+    strtofloat(lineArr[10], this->mv);
+    this->mvEW.setValue(*lineArr[11], *lineArr[11] == 'E' || *lineArr[11] == 'W');
+    this->posMode.setValue(*lineArr[12], true);
+    this->navStatus.setValue(*lineArr[13], true);
 }
 
 Field<char> RMC::getStatus()
@@ -1029,10 +1177,10 @@ void TXT::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
 
-    this->numMsg = std::stoi(lineArr[1]);
-    this->msgNum = std::stoi(lineArr[2]);
-    this->msgType = std::stoi(lineArr[3]);
-    this->text = std::string(lineArr[4]);
+    strtouint8(lineArr[1], this->numMsg);
+    strtouint8(lineArr[2], this->msgNum);
+    strtouint8(lineArr[3], this->msgType);
+    this->text.setValue(std::string(lineArr[4]), true);
 }
 
 Field<uint8_t> TXT::getNumMessages()
@@ -1094,14 +1242,14 @@ void VLW::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
 
-    this->twd = 255; /* Fixed field: null */
-    this->twdUnit = *lineArr[2]; /* Fixed field: N */
-    this->wd = 255; /* Fixed field: null */
-    this->wdUnit = *lineArr[4]; /* Fixed field: N */
-    this->tgd = std::stof(lineArr[5]);
-    this->tgdUnit = *lineArr[6]; /* Fixed field: N */
-    this->gd = std::stof(lineArr[7]);
-    this->gdUnit = *lineArr[8]; /* Fixed field: N */
+    this->twd.setValue(255, false); /* Fixed field: null */
+    this->twdUnit.setValue(*lineArr[2], *lineArr[2] == 'N'); /* Fixed field: N */
+    this->wd.setValue(255, false); /* Fixed field: null */
+    this->wdUnit.setValue(*lineArr[4], *lineArr[4] == 'N'); /* Fixed field: N */
+    strtofloat(lineArr[5], this->tgd);
+    this->tgdUnit.setValue(*lineArr[6], *lineArr[6] == 'N'); /* Fixed field: N */
+    strtofloat(lineArr[7], this->gd);
+    this->gdUnit.setValue(*lineArr[8], *lineArr[8] == 'N'); /* Fixed field: N */
 }
 
 Field<uint8_t> VLW::getTotalWaterDist()
@@ -1186,15 +1334,15 @@ void VTG::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
 
-    this->cogt = std::stof(lineArr[1]);
-    this->cogtUnit = *lineArr[2];
-    this->cogm = std::stof(lineArr[3]);
-    this->cogmUnit = *lineArr[4];
-    this->sogn = std::stof(lineArr[5]);
-    this->sognUnit = *lineArr[6];
-    this->sogk = std::stof(lineArr[7]);
-    this->sogkUnit = *lineArr[8];
-    this->posMode = *lineArr[9];
+    strtofloat(lineArr[1], this->cogt);
+    this->cogtUnit.setValue(*lineArr[2], *lineArr[2] == 'T');
+    strtofloat(lineArr[3], this->cogm);
+    this->cogmUnit.setValue(*lineArr[4], *lineArr[4] == 'M');
+    strtofloat(lineArr[5], this->sogn);
+    this->sognUnit.setValue(*lineArr[6], *lineArr[6] == 'N');
+    strtofloat(lineArr[7], this->sogk);
+    this->sogkUnit.setValue(*lineArr[8], *lineArr[8] == 'K');
+    this->posMode.setValue(*lineArr[9], true);
 }
 
 Field<float_t> VTG::getTrueCourseOverGround()
@@ -1280,13 +1428,13 @@ bool ZDA::checkValidity()
 void ZDA::parseNMEA(char ** lineArr, uint16_t length)
 {
     BASE::parseNMEA(lineArr, length);
+    TIME::parseNMEA(lineArr[1]);
 
-    this->time = std::string(lineArr[1]);
-    this->day = std::stoi(lineArr[2]);
-    this->month = std::stoi(lineArr[3]);
-    this->year = std::stoi(lineArr[4]);
-    this->ltzh = std::stoi(lineArr[5]);
-    this->ltzn = std::stoi(lineArr[6]);
+    strtouint8(lineArr[2], this->day);
+    strtouint8(lineArr[3], this->month);
+    strtouint16(lineArr[4], this->year);
+    strtouint8(lineArr[5], this->ltzh);
+    strtouint8(lineArr[6], this->ltzn);
 }
 
 Field<uint8_t> ZDA::getDay()
