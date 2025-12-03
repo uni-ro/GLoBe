@@ -215,13 +215,17 @@ float_t POS::degMin2DecDeg(float_t coords)
     int8_t deg = 0;
     float_t min = 0;
 
-    deg = (int16_t) coords / 100;
-    min = abs(coords) - abs(deg * 100);
+    deg = (int32_t) coords / 100;
+    min = fabs(coords) - abs(deg * 100);
 
-    degrees += deg;
+    // Calculate the total degrees (without sign so they can add nicely together)
+    degrees += abs(deg);
     degrees += min / 60.0;
 
-    return degrees;
+    // Reapply sign to final degrees value
+    degrees *= deg < 0 ? -1 : 1;
+
+    return (float_t) degrees;
 }
 
 /* ------------------------- END POS Definitions ------------------------ */
